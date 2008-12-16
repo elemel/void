@@ -22,50 +22,8 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 from __future__ import division
-
 import pygame, sys, random, math, os
-
-class  Vector(object):
-    def __init__(self, x=0, y=0):
-        self.__x = x
-        self.__y = y
-        
-    @property
-    def x(self):
-        return self.__x
-
-    @property
-    def y(self):
-        return self.__y
-        
-    def __add__(self, other):
-        return Vector(self.x + other.x, self.y + other.y)
-
-    def __sub__(self, other):
-        return Vector(self.x - other.x, self.y - other.y)
-
-    def __mul__(self, other):
-        return Vector(self.x * other, self.y * other)
-
-    def __rmul__(self, other):
-        return self * other
-
-    def __truediv__(self, other):
-        return Vector(self.x / other, self.y / other)
-        
-    def __neg__(self):
-        return Vector(-self.x, -self.y)
-        
-    def __iter__(self):
-        yield self.x
-        yield self.y
-        
-    def __abs__(self):
-        return math.sqrt(self.x ** 2 + self.y ** 2)
-    
-    @property
-    def unit(self):
-        return self / abs(self)
+from Vector import Vector
 
 class Transform(object):
     def __init__(self, offset, scale):
