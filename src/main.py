@@ -62,6 +62,10 @@ class  Vector(object):
         
     def __abs__(self):
         return math.sqrt(self.x ** 2 + self.y ** 2)
+    
+    @property
+    def unit(self):
+        return self / abs(self)
 
 class Transform(object):
     def __init__(self, offset, scale):
@@ -84,8 +88,8 @@ class Body(pygame.sprite.Sprite):
 
     @property
     def rect(self):
-        return pygame.Rect(self.pos.x - self.radius, self.pos.y - self.radius, self.radius * 2,
-                                self.radius * 2)
+        return pygame.Rect(self.pos.x - self.radius, self.pos.y - self.radius,
+                           self.radius * 2, self.radius * 2)
 
     def paint(self, display_surface, images, transform):
         image = images[type(self).__name__.lower()]
@@ -141,7 +145,8 @@ class Game(object):
         self.shot_group = pygame.sprite.Group()
         def create_shot():
             return Plasma([self.shot_group, self.body_group])
-        self.player_ship = Ship([self.player_group, self.body_group], create_shot)
+        self.player_ship = Ship([self.player_group, self.body_group],
+                                create_shot)
         for _ in xrange(10):
             self.create_asteroid()
         self.pos = Vector()
@@ -163,15 +168,16 @@ class Game(object):
         angle = (random.random() - 0.5) * math.pi
         dist = random.random() * 10 + 10
         asteroid.pos = dist * Vector(math.cos(angle), math.sin(angle))
-        unit = asteroid.pos / abs(asteroid.pos)
-        asteroid.velocity = -unit * asteroid.top_speed * (0.5 + 0.5 * random.random())
+        asteroid.velocity = (-asteroid.pos.unit * asteroid.top_speed *
+                             (0.5 + 0.5 * random.random()))
         return asteroid
 
     def update(self, delta_time):
         self.pos += self.velocity * delta_time
         self.player_ship.pos += self.velocity * delta_time
         self.body_group.update(delta_time)
-        pygame.sprite.groupcollide(self.shot_group, self.asteroid_group, True, True)
+        pygame.sprite.groupcollide(self.shot_group, self.asteroid_group, True,
+                                   True)
         if pygame.sprite.spritecollideany(self.player_ship,
                                           self.asteroid_group):
             sys.exit()
