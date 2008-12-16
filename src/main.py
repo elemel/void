@@ -35,8 +35,8 @@ class Body(pygame.sprite.Sprite):
 
     def __init__(self, groups):
         pygame.sprite.Sprite.__init__(self, *groups)
-        self.pos = Vector()
-        self.velocity = Vector()
+        self.pos = Vector([0, 0])
+        self.velocity = Vector([0, 0])
         self.rotation = 0
         self.rotation_speed = 0
 
@@ -77,7 +77,7 @@ class Ship(Body):
             shot = self.create_shot()
             shot.pos = self.pos
             shot.velocity = (self.shot_speed *
-                             Vector(1, 0.1 * (random.random() - 0.5)))
+                             Vector([1, 0.1 * (random.random() - 0.5)]))
             self.fired_at = pygame.time.get_ticks() / 1000
 
 class Asteroid(Body):
@@ -107,8 +107,8 @@ class Game(object):
                                 create_shot)
         for _ in xrange(10):
             self.create_asteroid()
-        self.pos = Vector()
-        self.velocity = Vector(1, 0)
+        self.pos = Vector([0, 0])
+        self.velocity = Vector([1, 0])
         self.width = 18
         self.height = 9.5
         
@@ -119,13 +119,13 @@ class Game(object):
         point_x = min(point_x, game_x + self.width / 2)
         point_y = max(point_y, game_y - self.height / 2)
         point_y = min(point_y, game_y + self.height / 2)
-        return Vector(point_x, point_y)
+        return Vector([point_x, point_y])
 
     def create_asteroid(self):
         asteroid = Asteroid([self.asteroid_group, self.body_group])
         angle = (random.random() - 0.5) * math.pi
         dist = random.random() * 10 + 10
-        asteroid.pos = dist * Vector(math.cos(angle), math.sin(angle))
+        asteroid.pos = dist * Vector([math.cos(angle), math.sin(angle)])
         asteroid.velocity = (-asteroid.pos.unit * asteroid.top_speed *
                              (0.5 + 0.5 * random.random()))
         return asteroid
@@ -192,15 +192,15 @@ def main():
         while old_time + time_step < pygame.time.get_ticks():
             pressed = pygame.key.get_pressed()
             if pressed[pygame.K_UP]:
-                direction = Vector(0, 1)
+                direction = Vector([0, 1])
             elif pressed[pygame.K_DOWN]:
-                direction = Vector(0, -1)
+                direction = Vector([0, -1])
             elif pressed[pygame.K_LEFT]:
-                direction = Vector(-1, 0)
+                direction = Vector([-1, 0])
             elif pressed[pygame.K_RIGHT]:
-                direction = Vector(1, 0)
+                direction = Vector([1, 0])
             else:
-                direction = Vector()
+                direction = Vector([0, 0])
             game.player_ship.firing = pressed[pygame.K_SPACE]
             game.player_ship.velocity = (direction *
                                          game.player_ship.top_speed)

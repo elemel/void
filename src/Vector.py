@@ -25,9 +25,8 @@ from __future__ import division
 import math
 
 class  Vector(object):
-    def __init__(self, x=0, y=0):
-        self.__x = x
-        self.__y = y
+    def __init__(self, iterable):
+        self.__x, self.__y = tuple(iterable)
         
     @property
     def x(self):
@@ -38,22 +37,22 @@ class  Vector(object):
         return self.__y
         
     def __add__(self, other):
-        return Vector(self.x + other.x, self.y + other.y)
+        return Vector([self.x + other.x, self.y + other.y])
 
     def __sub__(self, other):
-        return Vector(self.x - other.x, self.y - other.y)
+        return Vector([self.x - other.x, self.y - other.y])
 
     def __mul__(self, other):
-        return Vector(self.x * other, self.y * other)
+        return Vector([self.x * other, self.y * other])
 
     def __rmul__(self, other):
         return self * other
 
     def __truediv__(self, other):
-        return Vector(self.x / other, self.y / other)
+        return Vector([self.x / other, self.y / other])
         
     def __neg__(self):
-        return Vector(-self.x, -self.y)
+        return Vector([-self.x, -self.y])
         
     def __iter__(self):
         yield self.x
