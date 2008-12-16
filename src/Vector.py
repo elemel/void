@@ -22,44 +22,54 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 from __future__ import division
-import math
+from itertools import izip
+from math import sqrt
 
 class  Vector(object):
     def __init__(self, iterable):
-        self.__x, self.__y = tuple(iterable)
+        self.__comps = tuple(iterable)
         
     @property
     def x(self):
-        return self.__x
+        return self.__comps[0]
 
     @property
     def y(self):
-        return self.__y
+        return self.__comps[1]
+
+    @property
+    def z(self):
+        return self.__comps[2]
         
     def __add__(self, other):
-        return Vector([self.x + other.x, self.y + other.y])
+        return Vector(x + y for x, y in izip(self, other))
 
     def __sub__(self, other):
-        return Vector([self.x - other.x, self.y - other.y])
+        return Vector(x - y for x, y in izip(self, other))
 
     def __mul__(self, other):
-        return Vector([self.x * other, self.y * other])
+        return Vector(x * other for x in self)
 
     def __rmul__(self, other):
         return self * other
 
     def __truediv__(self, other):
-        return Vector([self.x / other, self.y / other])
+        return Vector(x / other for x in self)
         
     def __neg__(self):
-        return Vector([-self.x, -self.y])
+        return Vector(-x for x in self)
         
     def __iter__(self):
-        yield self.x
-        yield self.y
+        return iter(self.__comps)
         
     def __abs__(self):
-        return math.sqrt(self.x ** 2 + self.y ** 2)
+        return sqrt(sum(x ** 2 for x in self))
+    
+    def __len__(self):
+        return len(self.__comps)
+    
+    def __getitem__(self, index):
+        return self.__comps[index]
     
     @property
     def unit(self):
