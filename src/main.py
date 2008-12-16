@@ -27,7 +27,7 @@ class  Vector(object):
     def __rmul__(self, other):
         return self * other
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         return Vector(self.x / other, self.y / other)
         
     def __neg__(self):
@@ -45,18 +45,18 @@ class Body(pygame.sprite.Sprite):
 
     def __init__(self, groups):
         pygame.sprite.Sprite.__init__(self, *groups)
-        self.position = Vector()
+        self.pos = Vector()
         self.velocity = Vector()
         self.rotation = 0
         self.rotation_speed = 0
 
     def update(self, delta_time):
-        self.position += self.velocity * delta_time
+        self.pos += self.velocity * delta_time
         self.rotation += self.rotation_speed * delta_time
 
     @property
     def rect(self):
-        return pygame.Rect(self.position.x - self.radius, self.position.y - self.radius, self.radius * 2,
+        return pygame.Rect(self.pos.x - self.radius, self.pos.y - self.radius, self.radius * 2,
                                 self.radius * 2)
 
 class Ship(Body):
@@ -76,7 +76,7 @@ class Ship(Body):
         if (self.firing and
             self.fired_at + self.cooldown < pygame.time.get_ticks() / 1000):
             shot = self.create_shot()
-            shot.position = self.position
+            shot.pos = self.pos
             shot.velocity = (self.shot_speed *
                              Vector(1, 0.1 * (random.random() - 0.5)))
             self.fired_at = pygame.time.get_ticks() / 1000
@@ -84,7 +84,7 @@ class Ship(Body):
 class Asteroid(Body):
     radius = 1
 
-    top_speed = 10
+    top_speed = 3
     
     def __init__(self, groups):
         Body.__init__(self, groups)
@@ -107,13 +107,13 @@ class Game(object):
         self.player_ship = Ship([self.player_group, self.body_group], create_shot)
         for _ in xrange(10):
             self.create_asteroid()
-        self.position = Vector()
+        self.pos = Vector()
         self.velocity = Vector(1, 0)
         self.width = 18
         self.height = 9.5
         
     def clamp_point(self, point):
-        game_x, game_y = self.position
+        game_x, game_y = self.pos
         point_x, point_y = point
         point_x = max(point_x, game_x - self.width / 2)
         point_x = min(point_x, game_x + self.width / 2)
@@ -123,18 +123,28 @@ class Game(object):
 
     def create_asteroid(self):
         asteroid = Asteroid([self.asteroid_group, self.body_group])
-        asteroid.position = Vector(10 * (random.random() - 0.5),
-                                   10 * random.random())
-        asteroid.velocity = (asteroid.top_speed *
-                             Vector(2 * (random.random() - 0.5),
-                                    2 * (random.random() - 0.5)))
+        angle = (random.random() - 0.5) * math.pi
+        dist = random.random() * 10 + 10
+        asteroid.pos = dist * Vector(math.cos(angle), math.sin(angle))
+        unit = asteroid.pos / abs(asteroid.pos)
+        asteroid.velocity = -unit * asteroid.top_speed * (0.5 + 0.5 * random.random())
         return asteroid
 
     def update(self, delta_time):
-        self.position += self.velocity * delta_time
-        self.player_ship.position += self.velocity * delta_time
+        self.pos += self.velocity * delta_time
+        self.player_ship.pos += self.velocity * delta_time
         self.body_group.update(delta_time)
         pygame.sprite.groupcollide(self.shot_group, self.asteroid_group, True, True)
+        if pygame.sprite.spritecollideany(self.player_ship,
+                                          self.asteroid_group):
+            sys.exit()
+
+    def paint(self, display_surface, images, scale):
+        for shot in self.shot_group:
+            blit_body(shot, images['plasma'], display_surface, scale, self)
+        for asteroid in self.asteroid_group:
+            blit_body(asteroid, images['asteroid'], display_surface, scale, self)
+        blit_body(self.player_ship, images['ship'], display_surface, scale, self)
 
 def init_display():
     pygame.display.init()
@@ -157,7 +167,7 @@ def load_images():
     return images
 
 def apply_player_ship_constraints(player_ship, game):
-    player_ship.position = game.clamp_point(player_ship.position)
+    player_ship.pos = game.clamp_point(player_ship.pos)
     if abs(player_ship.velocity) > player_ship.top_speed:
         player_ship.velocity /= abs(player_ship.velocity)
         player_ship.velocity *= player_ship.top_speed
@@ -165,20 +175,11 @@ def apply_player_ship_constraints(player_ship, game):
 def blit_body(body, image, display_surface, scale, game):
     image_width, image_height = image.get_size()
     display_width, display_height = display_surface.get_size()
-    x, y = (body.position - game.position) * scale
+    x, y = (body.pos - game.pos) * scale
     x = (display_width - image_width) / 2 + x
     y = (display_height - image_height) / 2 - y
     display_surface.blit(image, (x, y))
 
-def update_display(display_surface, images, game, scale):
-    display_surface.fill(pygame.color.Color('black'))
-    for shot in game.shot_group:
-        blit_body(shot, images['plasma'], display_surface, scale, game)
-    for asteroid in game.asteroid_group:
-        blit_body(asteroid, images['asteroid'], display_surface, scale, game)
-    blit_body(game.player_ship, images['ship'], display_surface, scale, game)
-    pygame.display.flip()
-    
 def sign(x):
     return 0 if x == 0 else x / abs(x)
 
@@ -215,7 +216,9 @@ def main():
             game.update(time_step / 1000.0)
             apply_player_ship_constraints(game.player_ship, game)
             old_time += time_step
-        update_display(display_surface, images, game, scale)
+        display_surface.fill(pygame.color.Color('black'))
+        game.paint(display_surface, images, scale)
+        pygame.display.flip()
     
 if __name__ == '__main__':
     main()
