@@ -63,6 +63,11 @@ class  Vector(object):
     def __abs__(self):
         return math.sqrt(self.x ** 2 + self.y ** 2)
 
+class Transform(object):
+    def __init__(self, offset, scale):
+        self.offset = offset
+        self.scale = scale
+
 class Body(pygame.sprite.Sprite):
     radius = 1
 
@@ -81,6 +86,15 @@ class Body(pygame.sprite.Sprite):
     def rect(self):
         return pygame.Rect(self.pos.x - self.radius, self.pos.y - self.radius, self.radius * 2,
                                 self.radius * 2)
+
+    def paint(self, display_surface, images, transform):
+        image = images[type(self).__name__.lower()]
+        image_width, image_height = image.get_size()
+        display_width, display_height = display_surface.get_size()
+        x, y = (self.pos + transform.offset) * transform.scale
+        x = (display_width - image_width) / 2 + x
+        y = (display_height - image_height) / 2 - y
+        display_surface.blit(image, (x, y))
 
 class Ship(Body):
     radius = 1
@@ -112,7 +126,7 @@ class Asteroid(Body):
     def __init__(self, groups):
         Body.__init__(self, groups)
 
-class Shot(Body):
+class Plasma(Body):
     radius = 0.1
     top_speed = 20
 
@@ -126,7 +140,7 @@ class Game(object):
         self.asteroid_group = pygame.sprite.Group()
         self.shot_group = pygame.sprite.Group()
         def create_shot():
-            return Shot([self.shot_group, self.body_group])
+            return Plasma([self.shot_group, self.body_group])
         self.player_ship = Ship([self.player_group, self.body_group], create_shot)
         for _ in xrange(10):
             self.create_asteroid()
@@ -163,11 +177,9 @@ class Game(object):
             sys.exit()
 
     def paint(self, display_surface, images, scale):
-        for shot in self.shot_group:
-            blit_body(shot, images['plasma'], display_surface, scale, self)
-        for asteroid in self.asteroid_group:
-            blit_body(asteroid, images['asteroid'], display_surface, scale, self)
-        blit_body(self.player_ship, images['ship'], display_surface, scale, self)
+        transform = Transform(-self.pos, scale)
+        for body in self.body_group:
+            body.paint(display_surface, images, transform)
 
 def init_display():
     pygame.display.init()
@@ -176,7 +188,7 @@ def init_display():
     return display_surface
 
 def load_image(file_name):
-    root = os.path.dirname(os.path.dirname(__file__))
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     file_name = os.path.join(root, 'data', file_name)
     image = pygame.image.load(file_name)
     image.convert_alpha()
@@ -194,14 +206,6 @@ def apply_player_ship_constraints(player_ship, game):
     if abs(player_ship.velocity) > player_ship.top_speed:
         player_ship.velocity /= abs(player_ship.velocity)
         player_ship.velocity *= player_ship.top_speed
-
-def blit_body(body, image, display_surface, scale, game):
-    image_width, image_height = image.get_size()
-    display_width, display_height = display_surface.get_size()
-    x, y = (body.pos - game.pos) * scale
-    x = (display_width - image_width) / 2 + x
-    y = (display_height - image_height) / 2 - y
-    display_surface.blit(image, (x, y))
 
 def sign(x):
     return 0 if x == 0 else x / abs(x)
