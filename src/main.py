@@ -49,14 +49,13 @@ class Body(pygame.sprite.Sprite):
         return pygame.Rect(self.pos.x - self.radius, self.pos.y - self.radius,
                            self.radius * 2, self.radius * 2)
 
-    def paint(self, display_surface, images, transform):
-        image = images[type(self).__name__.lower()]
-        image_width, image_height = image.get_size()
-        display_width, display_height = display_surface.get_size()
+    def draw_with_transform(self, dest, transform):
+        image_width, image_height = self.image.get_size()
+        display_width, display_height = dest.get_size()
         x, y = (self.pos + transform.offset) * transform.scale
         x = (display_width - image_width) / 2 + x
         y = (display_height - image_height) / 2 - y
-        display_surface.blit(image, (x, y))
+        dest.blit(self.image, (x, y))
 
 class Ship(Body):
     radius = 1
@@ -96,15 +95,19 @@ class Plasma(Body):
         Body.__init__(self, groups)
 
 class Game(object):
-    def __init__(self):
+    def __init__(self, images):
+        self.images = images
         self.body_group = pygame.sprite.Group()
         self.player_group = pygame.sprite.Group()
         self.asteroid_group = pygame.sprite.Group()
         self.shot_group = pygame.sprite.Group()
         def create_shot():
-            return Plasma([self.shot_group, self.body_group])
+            shot = Plasma([self.shot_group, self.body_group])
+            shot.image = images['plasma']
+            return shot
         self.player_ship = Ship([self.player_group, self.body_group],
                                 create_shot)
+        self.player_ship.image = images['ship']
         for _ in xrange(10):
             self.create_asteroid()
         self.pos = Vector([0, 0])
@@ -123,6 +126,7 @@ class Game(object):
 
     def create_asteroid(self):
         asteroid = Asteroid([self.asteroid_group, self.body_group])
+        asteroid.image = self.images['asteroid']
         angle = (random.random() - 0.5) * math.pi
         dist = random.random() * 10 + 10
         asteroid.pos = dist * Vector([math.cos(angle), math.sin(angle)])
@@ -140,10 +144,9 @@ class Game(object):
                                           self.asteroid_group):
             sys.exit()
 
-    def paint(self, display_surface, images, scale):
-        transform = Transform(-self.pos, scale)
+    def draw_with_transform(self, dest, transform):
         for body in self.body_group:
-            body.paint(display_surface, images, transform)
+            body.draw_with_transform(dest, transform)
 
 def init_display():
     pygame.display.init()
@@ -179,7 +182,7 @@ def main():
     pygame.mouse.set_visible(False)
     display_surface = init_display()
     images = load_images()
-    game = Game()
+    game = Game(images)
     quit = False
     old_time = pygame.time.get_ticks()
     time_step = 20
@@ -208,7 +211,8 @@ def main():
             apply_player_ship_constraints(game.player_ship, game)
             old_time += time_step
         display_surface.fill(pygame.color.Color('black'))
-        game.paint(display_surface, images, scale)
+        transform = Transform(-game.pos, scale)
+        game.draw_with_transform(display_surface, transform)
         pygame.display.flip()
     
 if __name__ == '__main__':
