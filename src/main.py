@@ -56,6 +56,9 @@ class Body(pygame.sprite.Sprite):
         x = (display_width - image_width) / 2 + x
         y = (display_height - image_height) / 2 - y
         dest.blit(self.image, (x, y))
+        radius = int(self.radius * transform.scale)
+        center = int(x + image_width / 2), int(y + image_height / 2)
+        pygame.draw.circle(dest, pygame.color.Color('red'), center, radius, 3)
 
 class Ship(Body):
     radius = 1
@@ -80,7 +83,7 @@ class Ship(Body):
             self.fired_at = pygame.time.get_ticks() / 1000
 
 class Asteroid(Body):
-    radius = 1
+    radius = 2
 
     top_speed = 3
     
@@ -110,20 +113,7 @@ class Game(object):
         self.player_ship.image = images['ship']
         for _ in xrange(10):
             self.create_asteroid()
-        self.pos = Vector([0, 0])
-        self.velocity = Vector([1, 0])
-        self.width = 18
-        self.height = 9.5
         
-    def clamp_point(self, point):
-        game_x, game_y = self.pos
-        point_x, point_y = point
-        point_x = max(point_x, game_x - self.width / 2)
-        point_x = min(point_x, game_x + self.width / 2)
-        point_y = max(point_y, game_y - self.height / 2)
-        point_y = min(point_y, game_y + self.height / 2)
-        return Vector([point_x, point_y])
-
     def create_asteroid(self):
         asteroid = Asteroid([self.asteroid_group, self.body_group])
         asteroid.image = self.images['asteroid']
@@ -135,8 +125,6 @@ class Game(object):
         return asteroid
 
     def update(self, delta_time):
-        self.pos += self.velocity * delta_time
-        self.player_ship.pos += self.velocity * delta_time
         self.body_group.update(delta_time)
         pygame.sprite.groupcollide(self.shot_group, self.asteroid_group, True,
                                    True)
@@ -169,7 +157,6 @@ def load_images():
     return images
 
 def apply_player_ship_constraints(player_ship, game):
-    player_ship.pos = game.clamp_point(player_ship.pos)
     if abs(player_ship.velocity) > player_ship.top_speed:
         player_ship.velocity /= abs(player_ship.velocity)
         player_ship.velocity *= player_ship.top_speed
@@ -211,7 +198,7 @@ def main():
             apply_player_ship_constraints(game.player_ship, game)
             old_time += time_step
         display_surface.fill(pygame.color.Color('black'))
-        transform = Transform(-game.pos, scale)
+        transform = Transform(-game.player_ship.pos, scale)
         game.draw_with_transform(display_surface, transform)
         pygame.display.flip()
     
