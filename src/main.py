@@ -50,14 +50,26 @@ class Body(pygame.sprite.Sprite):
                            self.radius * 2, self.radius * 2)
 
     def draw_with_transform(self, dest, transform):
-        image_width, image_height = self.image.get_size()
+        self.draw_image(dest, transform)
+        self.draw_circle(dest, transform)
+        
+    def draw_image(self, dest, transform):
+        image = pygame.transform.rotate(self.image,
+                                        self.rotation * 180 / math.pi)
+        image_width, image_height = image.get_size()
         display_width, display_height = dest.get_size()
         x, y = (self.pos + transform.offset) * transform.scale
         x = (display_width - image_width) / 2 + x
         y = (display_height - image_height) / 2 - y
-        dest.blit(self.image, (x, y))
+        dest.blit(image, (x, y))
+
+    def draw_circle(self, dest, transform):
+        display_width, display_height = dest.get_size()
+        x, y = (self.pos + transform.offset) * transform.scale
+        x = display_width / 2 + x
+        y = display_height / 2 - y
         radius = int(self.radius * transform.scale)
-        center = int(x + image_width / 2), int(y + image_height / 2)
+        center = int(x), int(y)
         pygame.draw.circle(dest, pygame.color.Color('red'), center, radius, 3)
 
 class Ship(Body):
@@ -126,6 +138,8 @@ class Game(object):
         asteroid.pos = dist * Vector([math.cos(angle), math.sin(angle)])
         asteroid.velocity = (-asteroid.pos.unit * asteroid.top_speed *
                              (0.5 + 0.5 * random.random()))
+        asteroid.rotation = random.random() * 2 * math.pi
+        asteroid.rotation_speed = (-1 + 2 * random.random()) * 1
         return asteroid
 
     def update(self, delta_time):
