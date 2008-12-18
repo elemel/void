@@ -32,6 +32,7 @@ class Transform(object):
 
 class Body(pygame.sprite.Sprite):
     radius = 1
+    max_rotation_speed = 10
 
     def __init__(self, groups):
         pygame.sprite.Sprite.__init__(self, *groups)
@@ -74,41 +75,45 @@ class Body(pygame.sprite.Sprite):
 
 class Ship(Body):
     radius = 1
+    max_velocity = 5
+    max_rotation_speed = 5
+    shot_velocity = 10
+    gun_pos = 1.5
 
     def __init__(self, groups, create_shot):
         Body.__init__(self, groups)
         self.create_shot = create_shot
         self.thrusting = False
-        self.top_speed = 10
+        self.max_thrust = 1
         self.firing = False
         self.cooldown = 0.2
         self.fired_at = 0
-        self.shot_speed = 20
 
     def update(self, delta_time):
         Body.update(self, delta_time)        
-        self.velocity = (self.thrusting * self.top_speed
-                         * Vector([math.cos(self.rotation),
-                                   math.sin(self.rotation)]))
+        self.velocity += (self.thrusting * self.max_thrust
+                          * Vector([math.cos(self.rotation),
+                                    math.sin(self.rotation)]))
         if (self.firing and
             self.fired_at + self.cooldown < pygame.time.get_ticks() / 1000):
+            direction = Vector([math.cos(self.rotation),
+                                math.sin(self.rotation)])
             shot = self.create_shot()
-            shot.pos = self.pos
-            shot.velocity = (self.shot_speed *
-                             Vector([1, 0.1 * (random.random() - 0.5)]))
+            shot.pos = self.pos + direction * self.gun_pos
+            shot.rotation = self.rotation
+            shot.velocity = self.velocity + self.shot_velocity * direction
             self.fired_at = pygame.time.get_ticks() / 1000
 
 class Asteroid(Body):
     radius = 2
-
-    top_speed = 3
+    max_velocity = 3
     
     def __init__(self, groups):
         Body.__init__(self, groups)
 
 class Plasma(Body):
     radius = 0.1
-    top_speed = 20
+    max_velocity = 20
 
     def __init__(self, groups):
         Body.__init__(self, groups)
@@ -136,7 +141,7 @@ class Game(object):
         angle = (random.random() - 0.5) * math.pi
         dist = random.random() * 10 + 10
         asteroid.pos = dist * Vector([math.cos(angle), math.sin(angle)])
-        asteroid.velocity = (-asteroid.pos.unit * asteroid.top_speed *
+        asteroid.velocity = (-asteroid.pos.unit * asteroid.max_velocity *
                              (0.5 + 0.5 * random.random()))
         asteroid.rotation = random.random() * 2 * math.pi
         asteroid.rotation_speed = (-1 + 2 * random.random()) * 1
@@ -162,6 +167,7 @@ def init_display():
 
 def load_image(file_name):
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    root = os.getenv('VOID_ROOT', root)
     file_name = os.path.join(root, 'data', file_name)
     image = pygame.image.load(file_name)
     image.convert_alpha()
@@ -175,9 +181,9 @@ def load_images():
     return images
 
 def apply_player_ship_constraints(player_ship, game):
-    if abs(player_ship.velocity) > player_ship.top_speed:
+    if abs(player_ship.velocity) > player_ship.max_velocity:
         player_ship.velocity /= abs(player_ship.velocity)
-        player_ship.velocity *= player_ship.top_speed
+        player_ship.velocity *= player_ship.max_velocity
 
 def sign(x):
     return 0 if x == 0 else x / abs(x)
@@ -201,9 +207,11 @@ def main():
             pressed = pygame.key.get_pressed()
             game.player_ship.thrusting = pressed[pygame.K_UP]
             if pressed[pygame.K_LEFT]:
-                game.player_ship.rotation_speed = 10
+                game.player_ship.rotation_speed = \
+                    game.player_ship.max_rotation_speed
             elif pressed[pygame.K_RIGHT]:
-                game.player_ship.rotation_speed = -10
+                game.player_ship.rotation_speed = \
+                    -game.player_ship.max_rotation_speed
             else:
                 game.player_ship.rotation_speed = 0
             game.player_ship.firing = pressed[pygame.K_SPACE]
