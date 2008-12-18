@@ -66,6 +66,7 @@ class Ship(Body):
     def __init__(self, groups, create_shot):
         Body.__init__(self, groups)
         self.create_shot = create_shot
+        self.thrusting = False
         self.top_speed = 10
         self.firing = False
         self.cooldown = 0.2
@@ -74,6 +75,9 @@ class Ship(Body):
 
     def update(self, delta_time):
         Body.update(self, delta_time)        
+        self.velocity = (self.thrusting * self.top_speed
+                         * Vector([math.cos(self.rotation),
+                                   math.sin(self.rotation)]))
         if (self.firing and
             self.fired_at + self.cooldown < pygame.time.get_ticks() / 1000):
             shot = self.create_shot()
@@ -181,19 +185,14 @@ def main():
                 quit = True
         while old_time + time_step < pygame.time.get_ticks():
             pressed = pygame.key.get_pressed()
-            if pressed[pygame.K_UP]:
-                direction = Vector([0, 1])
-            elif pressed[pygame.K_DOWN]:
-                direction = Vector([0, -1])
-            elif pressed[pygame.K_LEFT]:
-                direction = Vector([-1, 0])
+            game.player_ship.thrusting = pressed[pygame.K_UP]
+            if pressed[pygame.K_LEFT]:
+                game.player_ship.rotation_speed = 10
             elif pressed[pygame.K_RIGHT]:
-                direction = Vector([1, 0])
+                game.player_ship.rotation_speed = -10
             else:
-                direction = Vector([0, 0])
+                game.player_ship.rotation_speed = 0
             game.player_ship.firing = pressed[pygame.K_SPACE]
-            game.player_ship.velocity = (direction *
-                                         game.player_ship.top_speed)
             game.update(time_step / 1000.0)
             apply_player_ship_constraints(game.player_ship, game)
             old_time += time_step
