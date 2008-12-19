@@ -34,9 +34,10 @@ class Body(pygame.sprite.Sprite):
     radius = 1
     max_rotation_speed = 10
 
-    def __init__(self, groups):
+    def __init__(self, groups, created_at):
         pygame.sprite.Sprite.__init__(self, *groups)
         self.pos = Vector([0, 0])
+        self.created_at = created_at
         self.velocity = Vector([0, 0])
         self.rotation = 0
         self.rotation_speed = 0
@@ -81,8 +82,8 @@ class Ship(Body):
     gun_pos = 1.5
     max_thrust = 0.5
 
-    def __init__(self, groups, create_shot):
-        Body.__init__(self, groups)
+    def __init__(self, groups, created_at, create_shot):
+        Body.__init__(self, groups, created_at)
         self.create_shot = create_shot
         self.thrusting = False
         self.firing = False
@@ -107,16 +108,10 @@ class Ship(Body):
 class Asteroid(Body):
     radius = 2
     max_velocity = 3
-    
-    def __init__(self, groups):
-        Body.__init__(self, groups)
 
 class Plasma(Body):
     radius = 0.1
     max_velocity = 20
-
-    def __init__(self, groups):
-        Body.__init__(self, groups)
 
 class Game(object):
     def __init__(self, images):
@@ -126,17 +121,17 @@ class Game(object):
         self.asteroid_group = pygame.sprite.Group()
         self.shot_group = pygame.sprite.Group()
         def create_shot():
-            shot = Plasma([self.shot_group, self.body_group])
+            shot = Plasma([self.shot_group, self.body_group], self.time)
             shot.image = images['plasma']
             return shot
         self.player_ship = Ship([self.player_group, self.body_group],
-                                create_shot)
+                                self.time, create_shot)
         self.player_ship.image = images['ship']
         for _ in xrange(10):
             self.create_asteroid()
         
     def create_asteroid(self):
-        asteroid = Asteroid([self.asteroid_group, self.body_group])
+        asteroid = Asteroid([self.asteroid_group, self.body_group], self.time)
         asteroid.image = self.images['asteroid']
         angle = (random.random() - 0.5) * math.pi
         dist = random.random() * 10 + 10
@@ -158,6 +153,10 @@ class Game(object):
     def draw_with_transform(self, dest, transform):
         for body in self.body_group:
             body.draw_with_transform(dest, transform)
+
+    @property
+    def time(self):
+        return pygame.time.get_ticks() / 1000
 
 def init_display():
     pygame.display.init()
