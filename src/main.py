@@ -184,9 +184,6 @@ def apply_player_ship_constraints(player_ship, game):
         player_ship.velocity /= abs(player_ship.velocity)
         player_ship.velocity *= player_ship.max_velocity
 
-def sign(x):
-    return 0 if x == 0 else x / abs(x)
-
 def main():
     pygame.init()
     pygame.mouse.set_visible(False)
