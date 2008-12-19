@@ -91,10 +91,16 @@ class Ship(Body):
         self.fired_at = 0
 
     def update(self, delta_time):
-        Body.update(self, delta_time)        
+        Body.update(self, delta_time)
+        self.update_velocity(delta_time)
+        self.update_cannon(delta_time)
+        
+    def update_velocity(self, delta_time):
         self.velocity += (self.thrusting * self.max_thrust
                           * Vector([math.cos(self.rotation),
                                     math.sin(self.rotation)]))
+
+    def update_cannon(self, delta_time):
         if (self.firing and
             self.fired_at + self.cooldown < pygame.time.get_ticks() / 1000):
             direction = Vector([math.cos(self.rotation),
