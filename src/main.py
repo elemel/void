@@ -116,22 +116,22 @@ class Plasma(Body):
 class Game(object):
     def __init__(self, images):
         self.images = images
-        self.body_group = pygame.sprite.Group()
+        self.bodies = pygame.sprite.Group()
         self.player_group = pygame.sprite.Group()
-        self.asteroid_group = pygame.sprite.Group()
-        self.shot_group = pygame.sprite.Group()
+        self.asteroids = pygame.sprite.Group()
+        self.shots = pygame.sprite.Group()
         def create_shot():
-            shot = Plasma([self.shot_group, self.body_group], self.time)
+            shot = Plasma([self.shots, self.bodies], self.time)
             shot.image = images['plasma']
             return shot
-        self.player_ship = Ship([self.player_group, self.body_group],
+        self.player_ship = Ship([self.player_group, self.bodies],
                                 self.time, create_shot)
         self.player_ship.image = images['ship']
         for _ in xrange(10):
             self.create_asteroid()
         
     def create_asteroid(self):
-        asteroid = Asteroid([self.asteroid_group, self.body_group], self.time)
+        asteroid = Asteroid([self.asteroids, self.bodies], self.time)
         asteroid.image = self.images['asteroid']
         angle = (random.random() - 0.5) * math.pi
         dist = random.random() * 10 + 10
@@ -143,15 +143,13 @@ class Game(object):
         return asteroid
 
     def update(self, delta_time):
-        self.body_group.update(delta_time)
-        pygame.sprite.groupcollide(self.shot_group, self.asteroid_group, True,
-                                   True)
-        if pygame.sprite.spritecollideany(self.player_ship,
-                                          self.asteroid_group):
+        self.bodies.update(delta_time)
+        pygame.sprite.groupcollide(self.shots, self.asteroids, True, True)
+        if pygame.sprite.spritecollideany(self.player_ship, self.asteroids):
             sys.exit()
 
     def draw_with_transform(self, dest, transform):
-        for body in self.body_group:
+        for body in self.bodies:
             body.draw_with_transform(dest, transform)
 
     @property
