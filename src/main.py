@@ -75,16 +75,16 @@ class Body(pygame.sprite.Sprite):
 
 class Ship(Body):
     radius = 1
-    max_velocity = 5
+    max_velocity = 10
     max_rotation_speed = 5
     shot_velocity = 10
     gun_pos = 1.5
+    max_thrust = 0.5
 
     def __init__(self, groups, create_shot):
         Body.__init__(self, groups)
         self.create_shot = create_shot
         self.thrusting = False
-        self.max_thrust = 1
         self.firing = False
         self.cooldown = 0.2
         self.fired_at = 0
