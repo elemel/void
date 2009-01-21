@@ -22,8 +22,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 from __future__ import division
-import pygame, sys, random, math, os
-from Vector import Vector
+import pygame, sys, random, math, os, numpy
 
 class Transform(object):
     def __init__(self, offset, scale):
@@ -31,16 +30,16 @@ class Transform(object):
         self.scale = scale
 
 class Body(pygame.sprite.Sprite):
-    radius = 1
-    max_rotation_speed = 10
+    radius = 1.0
+    max_rotation_speed = 10.0
 
     def __init__(self, groups, created_at):
         pygame.sprite.Sprite.__init__(self, *groups)
-        self.pos = Vector([0, 0])
+        self.pos = numpy.array([0.0, 0.0])
         self.created_at = created_at
-        self.velocity = Vector([0, 0])
-        self.rotation = 0
-        self.rotation_speed = 0
+        self.velocity = numpy.array([0.0, 0.0])
+        self.rotation = 0.0
+        self.rotation_speed = 0.0
 
     def update(self, delta_time):
         self.pos += self.velocity * delta_time
@@ -48,8 +47,8 @@ class Body(pygame.sprite.Sprite):
 
     @property
     def rect(self):
-        return pygame.Rect(self.pos.x - self.radius, self.pos.y - self.radius,
-                           self.radius * 2, self.radius * 2)
+        return pygame.Rect(self.pos[0] - self.radius, self.pos[1] - self.radius,
+                           self.radius * 2.0, self.radius * 2.0)
 
     def draw_with_transform(self, dest, transform):
         self.draw_image(dest, transform)
@@ -57,28 +56,28 @@ class Body(pygame.sprite.Sprite):
         
     def draw_image(self, dest, transform):
         image = pygame.transform.rotate(self.image,
-                                        self.rotation * 180 / math.pi)
+                                        self.rotation * 180.0 / math.pi)
         image_width, image_height = image.get_size()
         display_width, display_height = dest.get_size()
         x, y = (self.pos + transform.offset) * transform.scale
-        x = (display_width - image_width) / 2 + x
-        y = (display_height - image_height) / 2 - y
+        x = int((display_width - image_width) // 2 + x)
+        y = int((display_height - image_height) // 2 - y)
         dest.blit(image, (x, y))
 
     def draw_circle(self, dest, transform):
         display_width, display_height = dest.get_size()
         x, y = (self.pos + transform.offset) * transform.scale
-        x = display_width / 2 + x
-        y = display_height / 2 - y
+        x = display_width // 2 + x
+        y = display_height // 2 - y
         radius = int(self.radius * transform.scale)
         center = int(x), int(y)
         pygame.draw.circle(dest, pygame.color.Color('red'), center, radius, 3)
 
 class Ship(Body):
-    radius = 1
-    max_velocity = 10
-    max_rotation_speed = 5
-    shot_velocity = 10
+    radius = 1.0
+    max_velocity = 10.0
+    max_rotation_speed = 5.0
+    shot_velocity = 10.0
     gun_pos = 1.5
     max_thrust = 0.5
 
@@ -88,7 +87,7 @@ class Ship(Body):
         self.thrusting = False
         self.firing = False
         self.cooldown = 0.2
-        self.fired_at = 0
+        self.fired_at = 0.0
 
     def update(self, delta_time):
         Body.update(self, delta_time)
@@ -97,27 +96,27 @@ class Ship(Body):
         
     def update_velocity(self, delta_time):
         self.velocity += (self.thrusting * self.max_thrust
-                          * Vector([math.cos(self.rotation),
-                                    math.sin(self.rotation)]))
+                          * numpy.array([math.cos(self.rotation),
+                                         math.sin(self.rotation)]))
 
     def update_cannon(self, delta_time):
         if (self.firing and
-            self.fired_at + self.cooldown < pygame.time.get_ticks() / 1000):
-            direction = Vector([math.cos(self.rotation),
-                                math.sin(self.rotation)])
+            self.fired_at + self.cooldown < pygame.time.get_ticks() / 1000.0):
+            direction = numpy.array([math.cos(self.rotation),
+                                     math.sin(self.rotation)])
             shot = self.create_shot()
             shot.pos = self.pos + direction * self.gun_pos
             shot.rotation = self.rotation
             shot.velocity = self.velocity + self.shot_velocity * direction
-            self.fired_at = pygame.time.get_ticks() / 1000
+            self.fired_at = pygame.time.get_ticks() / 1000.0
 
 class Asteroid(Body):
-    radius = 2
-    max_velocity = 3
+    radius = 2.0
+    max_velocity = 3.0
 
 class Plasma(Body):
     radius = 0.1
-    max_velocity = 20
+    max_velocity = 20.0
 
 class Game(object):
     def __init__(self, images):
@@ -140,12 +139,16 @@ class Game(object):
         asteroid = Asteroid([self.asteroids, self.bodies], self.time)
         asteroid.image = self.images['asteroid']
         angle = (random.random() - 0.5) * math.pi
-        dist = random.random() * 10 + 10
-        asteroid.pos = dist * Vector([math.cos(angle), math.sin(angle)])
-        asteroid.velocity = (-asteroid.pos.unit * asteroid.max_velocity *
-                             (0.5 + 0.5 * random.random()))
-        asteroid.rotation = random.random() * 2 * math.pi
-        asteroid.rotation_speed = (-1 + 2 * random.random()) * 1
+        dist = random.random() * 10.0 + 10.0
+        asteroid.pos = dist * numpy.array([math.cos(angle), math.sin(angle)])
+        if asteroid.pos.any():
+            unit = asteroid.pos / numpy.linalg.norm(asteroid.pos)
+            asteroid.velocity = (-unit * asteroid.max_velocity *
+                                 (0.5 + 0.5 * random.random()))
+        else:
+            asteroid.velocity = numpy.array([0.0, 0.0])
+        asteroid.rotation = random.random() * 2.0 * math.pi
+        asteroid.rotation_speed = (-1.0 + 2.0 * random.random()) * 1.0
         return asteroid
 
     def update(self, delta_time):
@@ -160,7 +163,7 @@ class Game(object):
 
     @property
     def time(self):
-        return pygame.time.get_ticks() / 1000
+        return pygame.time.get_ticks() / 1000.0
 
 def init_display():
     pygame.display.init()
@@ -184,8 +187,9 @@ def load_images():
     return images
 
 def apply_player_ship_constraints(player_ship, game):
-    if abs(player_ship.velocity) > player_ship.max_velocity:
-        player_ship.velocity /= abs(player_ship.velocity)
+    velocity_mag = numpy.linalg.norm(player_ship.velocity)
+    if velocity_mag > player_ship.max_velocity:
+        player_ship.velocity /= velocity_mag
         player_ship.velocity *= player_ship.max_velocity
 
 def main():
@@ -197,7 +201,7 @@ def main():
     quit = False
     old_time = pygame.time.get_ticks()
     time_step = 20
-    scale = 50
+    scale = 50.0
     while not quit:
         for event in pygame.event.get():
             if (event.type == pygame.QUIT or
@@ -213,7 +217,7 @@ def main():
                 game.player_ship.rotation_speed = \
                     -game.player_ship.max_rotation_speed
             else:
-                game.player_ship.rotation_speed = 0
+                game.player_ship.rotation_speed = 0.0
             game.player_ship.firing = pressed[pygame.K_SPACE]
             game.update(time_step / 1000.0)
             apply_player_ship_constraints(game.player_ship, game)
