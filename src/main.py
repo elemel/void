@@ -26,11 +26,6 @@ import pygame, sys, random, math, numpy
 from pygame.locals import *
 from OpenGL.GL import *
 
-class Transform(object):
-    def __init__(self, offset, scale):
-        self.offset = offset
-        self.scale = scale
-
 class Body(pygame.sprite.Sprite):
     radius = 1.0
     max_rotation_speed = 10.0
@@ -52,7 +47,7 @@ class Body(pygame.sprite.Sprite):
         return pygame.Rect(self.pos[0] - self.radius, self.pos[1] - self.radius,
                            self.radius * 2.0, self.radius * 2.0)
 
-    def draw_with_transform(self, dest, transform):
+    def draw(self):
         x, y = self.pos
         glPushMatrix()
         glTranslated(x, y, 0.0)
@@ -168,9 +163,9 @@ class Game(object):
         if pygame.sprite.spritecollideany(self.player_ship, self.asteroids):
             sys.exit()
 
-    def draw_with_transform(self, dest, transform):
+    def draw(self):
         for body in self.bodies:
-            body.draw_with_transform(dest, transform)
+            body.draw()
 
     @property
     def time(self):
@@ -194,7 +189,7 @@ def apply_player_ship_constraints(player_ship, game):
 def main():
     pygame.init()
     pygame.mouse.set_visible(False)
-    display_surface = init_display()
+    init_display()
     game = Game()
     quit = False
     old_time = pygame.time.get_ticks()
@@ -221,12 +216,11 @@ def main():
             apply_player_ship_constraints(game.player_ship, game)
             old_time += time_step
         glClear(GL_COLOR_BUFFER_BIT)
-        transform = Transform(-game.player_ship.pos, scale)
         glPushMatrix()
         x, y = game.player_ship.pos
         glScaled(0.1, 0.15, 0.1)
         glTranslated(-x, -y, 0.0)
-        game.draw_with_transform(display_surface, transform)
+        game.draw()
         glPopMatrix()
         pygame.display.flip()
     
