@@ -22,7 +22,9 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 from __future__ import division
-import pygame, sys, random, math, os, numpy
+import pygame, sys, random, math, numpy
+from pygame.locals import *
+from OpenGL.GL import *
 
 class Transform(object):
     def __init__(self, offset, scale):
@@ -51,27 +53,15 @@ class Body(pygame.sprite.Sprite):
                            self.radius * 2.0, self.radius * 2.0)
 
     def draw_with_transform(self, dest, transform):
-        self.draw_image(dest, transform)
-        self.draw_circle(dest, transform)
-        
-    def draw_image(self, dest, transform):
-        image = pygame.transform.rotate(self.image,
-                                        self.rotation * 180.0 / math.pi)
-        image_width, image_height = image.get_size()
-        display_width, display_height = dest.get_size()
-        x, y = (self.pos + transform.offset) * transform.scale
-        x = int((display_width - image_width) // 2 + x)
-        y = int((display_height - image_height) // 2 - y)
-        dest.blit(image, (x, y))
+        x, y = self.pos
+        glPushMatrix()
+        glTranslated(x, y, 0.0)
+        glRotated((self.rotation * 180.0) / math.pi - 90.0, 0.0, 0.0, 1.0)
+        self.draw_geometry()
+        glPopMatrix()
 
-    def draw_circle(self, dest, transform):
-        display_width, display_height = dest.get_size()
-        x, y = (self.pos + transform.offset) * transform.scale
-        x = display_width // 2 + x
-        y = display_height // 2 - y
-        radius = int(self.radius * transform.scale)
-        center = int(x), int(y)
-        pygame.draw.circle(dest, pygame.color.Color('red'), center, radius, 3)
+    def draw_geometry(self):
+        pass
 
 class Ship(Body):
     radius = 1.0
@@ -110,34 +100,55 @@ class Ship(Body):
             shot.velocity = self.velocity + self.shot_velocity * direction
             self.fired_at = pygame.time.get_ticks() / 1000.0
 
+    def draw_geometry(self):
+        glBegin(GL_TRIANGLES)
+        glColor3d(0.0, 1.0, 0.0)
+        glVertex2d(-0.5, -1.0)
+        glVertex2d(0.0, 1.0)
+        glVertex2d(0.5, -1.0)
+        glEnd()
+
 class Asteroid(Body):
     radius = 2.0
     max_velocity = 3.0
+
+    def draw_geometry(self):
+        glBegin(GL_TRIANGLES)
+        glColor3d(0.0, 0.0, 1.0)
+        glVertex2d(-2.0, -2.0)
+        glVertex2d(2.0, -2.0)
+        glVertex2d(0, 2.0)
+        glEnd()
 
 class Plasma(Body):
     radius = 0.1
     max_velocity = 20.0
 
+    def draw_geometry(self):
+        glBegin(GL_QUADS)
+        glColor3d(1.0, 0.0, 0.0)
+        glVertex2d(-0.1, -0.1)
+        glVertex2d(-0.1, 0.1)
+        glVertex2d(0.1, 0.1)
+        glVertex2d(0.1, -0.1)
+        glEnd()
+
 class Game(object):
-    def __init__(self, images):
-        self.images = images
+    def __init__(self):
         self.bodies = pygame.sprite.Group()
         self.player_group = pygame.sprite.Group()
         self.asteroids = pygame.sprite.Group()
         self.shots = pygame.sprite.Group()
         def create_shot():
             shot = Plasma([self.shots, self.bodies], self.time)
-            shot.image = images['plasma']
             return shot
         self.player_ship = Ship([self.player_group, self.bodies],
                                 self.time, create_shot)
-        self.player_ship.image = images['ship']
         for _ in xrange(10):
             self.create_asteroid()
         
     def create_asteroid(self):
         asteroid = Asteroid([self.asteroids, self.bodies], self.time)
-        asteroid.image = self.images['asteroid']
         angle = (random.random() - 0.5) * math.pi
         dist = random.random() * 10.0 + 10.0
         asteroid.pos = dist * numpy.array([math.cos(angle), math.sin(angle)])
@@ -168,23 +179,11 @@ class Game(object):
 def init_display():
     pygame.display.init()
     resolution = pygame.display.list_modes()[0]
-    display_surface = pygame.display.set_mode(resolution, pygame.FULLSCREEN)
+    display_surface = pygame.display.set_mode(resolution, FULLSCREEN |
+                                              DOUBLEBUF | OPENGL |
+                                              OPENGLBLIT)
+    glClearColor(0.0, 0.0, 0.0, 0.0)
     return display_surface
-
-def load_image(file_name):
-    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    root = os.getenv('VOID_ROOT', root)
-    file_name = os.path.join(root, 'data', file_name)
-    image = pygame.image.load(file_name)
-    image.convert_alpha()
-    return image
-
-def load_images():
-    images = {}
-    images['ship'] = load_image("ship.png")
-    images['asteroid'] = load_image("asteroid.png")
-    images['plasma'] = load_image("plasma.png")
-    return images
 
 def apply_player_ship_constraints(player_ship, game):
     velocity_mag = numpy.linalg.norm(player_ship.velocity)
@@ -196,8 +195,7 @@ def main():
     pygame.init()
     pygame.mouse.set_visible(False)
     display_surface = init_display()
-    images = load_images()
-    game = Game(images)
+    game = Game()
     quit = False
     old_time = pygame.time.get_ticks()
     time_step = 20
@@ -222,9 +220,14 @@ def main():
             game.update(time_step / 1000.0)
             apply_player_ship_constraints(game.player_ship, game)
             old_time += time_step
-        display_surface.fill(pygame.color.Color('black'))
+        glClear(GL_COLOR_BUFFER_BIT)
         transform = Transform(-game.player_ship.pos, scale)
+        glPushMatrix()
+        x, y = game.player_ship.pos
+        glScaled(0.1, 0.15, 0.1)
+        glTranslated(-x, -y, 0.0)
         game.draw_with_transform(display_surface, transform)
+        glPopMatrix()
         pygame.display.flip()
     
 if __name__ == '__main__':
