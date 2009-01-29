@@ -106,13 +106,27 @@ class Ship(Body):
 class Asteroid(Body):
     radius = 2.0
     max_velocity = 3.0
+    vertices = [[-2.0, -2.0], [2.0, -2.0], [0.0, 2.0]]
+
+    @staticmethod
+    def generate(groups, time):
+        asteroid = Asteroid(groups, time)
+        asteroid.radius = 1.5 + random.random()
+        angles = [math.pi * 2.0 * random.random()
+                  for _ in xrange(random.randrange(4, 6))]
+        angles.sort()
+        step = math.pi * 2.0 / len(angles)
+        for i in xrange(len(angles)):
+            angles[i] = (angles[i] + i * step) / 2.0
+        asteroid.vertices = [(math.cos(a) * asteroid.radius,
+                              math.sin(a) * asteroid.radius) for a in angles]
+        return asteroid
 
     def draw_geometry(self):
-        glBegin(GL_TRIANGLES)
+        glBegin(GL_POLYGON)
         glColor3d(0.0, 0.0, 1.0)
-        glVertex2d(-2.0, -2.0)
-        glVertex2d(2.0, -2.0)
-        glVertex2d(0, 2.0)
+        for x, y in self.vertices:
+            glVertex2d(x, y)
         glEnd()
 
 class Plasma(Body):
@@ -143,7 +157,7 @@ class Game(object):
             self.create_asteroid()
         
     def create_asteroid(self):
-        asteroid = Asteroid([self.asteroids, self.bodies], self.time)
+        asteroid = Asteroid.generate([self.asteroids, self.bodies], self.time)
         angle = (random.random() - 0.5) * math.pi
         dist = random.random() * 10.0 + 10.0
         asteroid.pos = dist * numpy.array([math.cos(angle), math.sin(angle)])
