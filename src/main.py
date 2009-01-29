@@ -183,8 +183,7 @@ def init_display():
 def apply_player_ship_constraints(player_ship, game):
     velocity_mag = numpy.linalg.norm(player_ship.velocity)
     if velocity_mag > player_ship.max_velocity:
-        player_ship.velocity /= velocity_mag
-        player_ship.velocity *= player_ship.max_velocity
+        player_ship.velocity *= player_ship.max_velocity / velocity_mag
 
 def main():
     pygame.init()
