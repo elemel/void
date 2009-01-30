@@ -121,7 +121,7 @@ class Asteroid(Body):
                   for _ in xrange(random.randrange(4, 6))]
         angles.sort()
         
-        # Smooth angles by averaging them with a perfect polygon
+        # Smooth angles by averaging them with a perfect polygon.
         step = math.pi * 2.0 / len(angles)
         for i in xrange(len(angles)):
             angles[i] = (angles[i] + i * step) / 2.0
