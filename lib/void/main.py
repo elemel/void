@@ -52,7 +52,7 @@ class Body(object):
 
 class Ship(Body):
     radius = 1.0
-    max_velocity = 10.0
+    max_velocity = 15.0
     max_rotation_speed = 5.0
     shot_velocity = 10.0
     gun_pos = 1.5
@@ -82,9 +82,9 @@ class Ship(Body):
     def draw_geometry(self):
         glBegin(GL_TRIANGLES)
         glColor3d(0.0, 1.0, 0.0)
-        glVertex2d(-0.5, -1.0)
-        glVertex2d(0.0, 1.0)
-        glVertex2d(0.5, -1.0)
+        glVertex2d(-1.0, -1.0)
+        glVertex2d(0.0, 2.0)
+        glVertex2d(1.0, -1.0)
         glEnd()
 
 class Asteroid(Body):
@@ -98,7 +98,7 @@ class Asteroid(Body):
         asteroid = Asteroid(groups, time)
         asteroid.color = [0.5 * random.random(), 0.5 * random.random(),
                           0.5 + 0.5 * random.random()]
-        asteroid.radius = 1.5 + random.random()
+        asteroid.radius = 3.0 + 3.0 * random.random()
 
         # Generate 4-5 angles as a sorted list.
         angles = [math.pi * 2.0 * random.random()
@@ -143,7 +143,7 @@ class VoidWindow(pyglet.window.Window):
             return shot
         self.player_ship = Ship([], 0.0, create_shot)
         self.asteroids = []
-        for _ in xrange(10):
+        for _ in xrange(20):
             self.asteroids.append(self.generate_asteroid())
 
     def update(self, dt):
@@ -157,7 +157,7 @@ class VoidWindow(pyglet.window.Window):
         self.clear()
         glPushMatrix()
         glTranslated(self.width / 2.0, self.height / 2.0, 0.0)
-        glScaled(20.0, 20.0, 20.0)
+        glScaled(15.0, 15.0, 15.0)
         x, y = self.player_ship.pos
         glTranslated(-x, -y, 0.0)
         self.player_ship.draw()
@@ -189,8 +189,8 @@ class VoidWindow(pyglet.window.Window):
 
     def generate_asteroid(self):
         asteroid = Asteroid.generate([], 0.0)
-        angle = random.random() * 2.0 * math.pi
-        dist = random.random() * 10.0 + 10.0
+        angle = 2.0 * math.pi * random.random()
+        dist = 15.0 + 15.0 * random.random()
         asteroid.pos = dist * numpy.array([math.cos(angle), math.sin(angle)])
         if asteroid.pos.any():
             unit = asteroid.pos / numpy.linalg.norm(asteroid.pos)
