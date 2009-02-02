@@ -136,9 +136,8 @@ class Plasma(Body):
 
 class VoidWindow(pyglet.window.Window):
     def __init__(self):
-        pyglet.window.Window.__init__(self, width=640, height=480,
-                                      caption="Void")
-        pyglet.clock.schedule_interval(self.update, 0.01)
+        pyglet.window.Window.__init__(self, fullscreen=True, caption="Void")
+        pyglet.clock.schedule_interval(self.update, 1.0 / 60.0)
         def create_shot():
             shot = Plasma([], 0.0)
             return shot
