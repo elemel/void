@@ -25,102 +25,27 @@ import sys, random, math, numpy, pyglet
 import Box2D2 as box2d
 from pyglet.gl import *
 
-class Body(object):
-    radius = 1.0
-    max_rotation_speed = 10.0
-
-    def __init__(self, groups, created_at):
-        self.pos = numpy.array([0.0, 0.0])
-        self.created_at = created_at
-        self.velocity = numpy.array([0.0, 0.0])
-        self.rotation = 0.0
-        self.rotation_speed = 0.0
-
-    def update(self, delta_time):
-        self.pos += self.velocity * delta_time
-        self.rotation += self.rotation_speed * delta_time
-
-    def draw(self):
-        x, y = self.pos
-        glPushMatrix()
-        glTranslated(x, y, 0.0)
-        glRotated((self.rotation * 180.0) / math.pi - 90.0, 0.0, 0.0, 1.0)
-        self.draw_geometry()
-        glPopMatrix()
-
-    def draw_geometry(self):
-        pass
-
-class Asteroid(Body):
-    radius = 2.0
-    max_velocity = 3.0
-    color = [0.0, 0.0, 1.0]
-    vertices = [[-2.0, -2.0], [2.0, -2.0], [0.0, 2.0]]
-
-    @staticmethod
-    def generate(groups, time):
-        asteroid = Asteroid(groups, time)
-        asteroid.color = [0.5 * random.random(), 0.5 * random.random(),
-                          0.5 + 0.5 * random.random()]
-        asteroid.radius = 3.0 + 3.0 * random.random()
-
-        # Generate 4-5 angles as a sorted list.
-        angles = [math.pi * 2.0 * random.random()
-                  for _ in xrange(random.randrange(4, 6))]
-        angles.sort()
-        
-        # Smooth angles by averaging them with a perfect polygon.
-        step = math.pi * 2.0 / len(angles)
-        for i in xrange(len(angles)):
-            angles[i] = (angles[i] + i * step) / 2.0
-
-        asteroid.vertices = [(math.cos(a) * asteroid.radius,
-                              math.sin(a) * asteroid.radius) for a in angles]
-        return asteroid
-
-    def draw_geometry(self):
-        glBegin(GL_POLYGON)
-        glColor3d(*self.color)
-        for vertex in self.vertices:
-            glVertex2d(*vertex)
-        glEnd()
-
-class Plasma(Body):
-    radius = 0.1
-    max_velocity = 20.0
-
-    def draw_geometry(self):
-        glBegin(GL_QUADS)
-        glColor3d(1.0, 0.0, 0.0)
-        glVertex2d(-0.1, -0.1)
-        glVertex2d(-0.1, 0.1)
-        glVertex2d(0.1, 0.1)
-        glVertex2d(0.1, -0.1)
-        glEnd()
-
 class VoidWindow(pyglet.window.Window):
     def __init__(self):
         pyglet.window.Window.__init__(self, fullscreen=True, caption="Void")
         self.set_mouse_visible(False)
         self.create_world()
         self.create_ship_body()
+        self.asteroid_bodies = []
+        for _ in xrange(10):
+            self.create_asteroid_body()
         self.ship_thrusting = False
         self.ship_firing = False
         self.ship_max_angular_velocity = 2.0 * math.pi
         pyglet.clock.schedule_interval(self.update, 1.0 / 60.0)
-        self.asteroids = []
-        for _ in xrange(20):
-            self.asteroids.append(self.generate_asteroid())
 
     def update(self, dt):
         if self.ship_thrusting:
             angle = self.ship_body.GetAngle()
-            force = 50.0 * box2d.b2Vec2(math.cos(angle), math.sin(angle))
+            force = 100.0 * box2d.b2Vec2(math.cos(angle), math.sin(angle))
             point = self.ship_body.GetPosition()
             self.ship_body.ApplyForce(force, point)
         self.world.Step(dt, 10, 8)
-        for asteroid in self.asteroids:
-            asteroid.update(dt)
         
     def on_draw(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
@@ -135,23 +60,26 @@ class VoidWindow(pyglet.window.Window):
         glPopMatrix()
 
     def draw_ship(self):
-        position = self.ship_body.GetPosition()
-        ship_shape = self.ship_body.GetShapeList()
-        polygon = ship_shape.asPolygon()
+        self.draw_body(self.ship_body, (0.0, 1.0, 0.0))
+
+    def draw_asteroids(self):
+        for asteroid_body in self.asteroid_bodies:
+            self.draw_body(asteroid_body, (0.0, 0.0, 1.0))
+
+    def draw_body(self, body, color):
+        position = body.GetPosition()
+        angle = body.GetAngle()
+        shape = body.GetShapeList()
+        polygon = shape.asPolygon()
         glPushMatrix()
         glTranslated(position.x, position.y, 0.0)
-        glRotated((self.ship_body.GetAngle() * 180.0) / math.pi - 90.0,
-                  0.0, 0.0, 1.0)
-        glBegin(GL_TRIANGLES)
-        glColor3d(0.0, 1.0, 0.0)
+        glRotated(angle * 180.0 / math.pi - 90.0, 0.0, 0.0, 1.0)
+        glBegin(GL_POLYGON)
+        glColor3d(*color)
         for x, y in polygon.getCoreVertices_tuple():
             glVertex2d(x, y)
         glEnd()
         glPopMatrix()
-
-    def draw_asteroids(self):
-        for asteroid in self.asteroids:
-            asteroid.draw()
 
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.ESCAPE:
@@ -190,8 +118,8 @@ class VoidWindow(pyglet.window.Window):
 
     def create_world(self):
         world_aabb = box2d.b2AABB()
-        world_aabb.lowerBound.Set(-100.0, -100.0)
-        world_aabb.upperBound.Set(100.0, 100.0)
+        world_aabb.lowerBound.Set(-200.0, -200.0)
+        world_aabb.upperBound.Set(200.0, 200.0)
         gravity = box2d.b2Vec2(0.0, 0.0)
         self.world = box2d.b2World(world_aabb, gravity, False)
 
@@ -202,9 +130,36 @@ class VoidWindow(pyglet.window.Window):
         ship_shape_def = box2d.b2PolygonDef()
         ship_shape_def.setVertices_tuple([(-1.0, -1.0), (1.0, -1.0),
                                           (0.0, 2.0)])
-        ship_shape_def.density = 1.0
+        ship_shape_def.density = 2.0
+        ship_shape_def.restitution = 1.0
         self.ship_body.CreateShape(ship_shape_def)
         self.ship_body.SetMassFromShapes()
+
+    def create_asteroid_body(self):
+        angle = 2.0 * math.pi * random.random()
+        distance = 15.0 + 15.0 * random.random()
+        x = distance * math.cos(angle)
+        y = distance * math.sin(angle)
+        asteroid_body_def = box2d.b2BodyDef()
+        asteroid_body_def.position.Set(x, y)
+        asteroid_body = self.world.CreateBody(asteroid_body_def)
+        asteroid_shape_def = box2d.b2PolygonDef()
+        radius = 3.0 + 2.0 * random.random()
+        vertices = []
+        for i in xrange(5):
+            angle = (i + random.random()) / 5.0 * 2.0 * math.pi
+            x = radius * math.cos(angle)
+            y = radius * math.sin(angle)
+            vertices.append((x, y))
+        asteroid_shape_def.setVertices_tuple(vertices)
+        asteroid_shape_def.density = 4.0 + random.random()
+        asteroid_shape_def.restitution = 1.0
+        asteroid_body.CreateShape(asteroid_shape_def)
+        asteroid_body.SetMassFromShapes()
+        asteroid_body.SetLinearVelocity(box2d.b2Vec2(2.0 * random.random(),
+                                                     2.0 * random.random()))
+        asteroid_body.SetAngularVelocity(math.pi * (random.random() - 0.5))
+        self.asteroid_bodies.append(asteroid_body)
 
 def main():
     window = VoidWindow()
