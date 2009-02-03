@@ -32,7 +32,7 @@ class VoidWindow(pyglet.window.Window):
         self.create_world()
         self.create_ship_body()
         self.asteroid_bodies = []
-        for _ in xrange(10):
+        for _ in xrange(20):
             self.create_asteroid_body()
         self.ship_thrusting = False
         self.ship_firing = False
@@ -118,6 +118,8 @@ class VoidWindow(pyglet.window.Window):
                                           (0.0, 2.0)])
         ship_shape_def.density = 2.0
         ship_shape_def.restitution = 1.0
+        ship_shape_def.filter.categoryBits = 0x0001
+        ship_shape_def.filter.maskBits = 0x0002
         self.ship_body.CreateShape(ship_shape_def)
         self.ship_body.SetMassFromShapes()
 
@@ -140,11 +142,14 @@ class VoidWindow(pyglet.window.Window):
         asteroid_shape_def.setVertices_tuple(vertices)
         asteroid_shape_def.density = 4.0 + random.random()
         asteroid_shape_def.restitution = 1.0
+        asteroid_shape_def.filter.categoryBits = 0x0002
+        asteroid_shape_def.filter.maskBits = 0x0001
         asteroid_body.CreateShape(asteroid_shape_def)
         asteroid_body.SetMassFromShapes()
-        asteroid_body.SetLinearVelocity(box2d.b2Vec2(2.0 * random.random(),
-                                                     2.0 * random.random()))
-        asteroid_body.SetAngularVelocity(math.pi * (random.random() - 0.5))
+        linear_velocity = 3.0 * box2d.b2Vec2(random.random() - 0.5,
+                                             random.random() - 0.5)
+        asteroid_body.SetLinearVelocity(linear_velocity)
+        asteroid_body.SetAngularVelocity(random.random() - 0.5)
         color = (0.5 * random.random(),
                  0.5 * random.random(),
                  0.5 * random.random() + 0.5)
