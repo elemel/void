@@ -112,6 +112,7 @@ class VoidWindow(pyglet.window.Window):
     def create_ship_body(self):
         ship_body_def = box2d.b2BodyDef()
         ship_body_def.position.Set(0.0, 0.0)
+        ship_body_def.angle = 2.0 * math.pi * random.random()
         self.ship_body = self.world.CreateBody(ship_body_def)
         ship_shape_def = box2d.b2PolygonDef()
         ship_shape_def.setVertices_tuple([(-1.0, -1.0), (1.0, -1.0),
@@ -130,6 +131,7 @@ class VoidWindow(pyglet.window.Window):
         y = distance * math.sin(angle)
         asteroid_body_def = box2d.b2BodyDef()
         asteroid_body_def.position.Set(x, y)
+        asteroid_body_def.angle = 2.0 * math.pi * random.random()
         asteroid_body = self.world.CreateBody(asteroid_body_def)
         asteroid_shape_def = box2d.b2PolygonDef()
         radius = 2.0 + 5.0 * random.random()
