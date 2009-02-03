@@ -101,6 +101,7 @@ class Plasma(Body):
 class VoidWindow(pyglet.window.Window):
     def __init__(self):
         pyglet.window.Window.__init__(self, fullscreen=True, caption="Void")
+        self.set_mouse_visible(False)
         self.create_world()
         self.create_ship_body()
         self.ship_thrusting = False
