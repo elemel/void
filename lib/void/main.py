@@ -101,20 +101,8 @@ class Plasma(Body):
 class VoidWindow(pyglet.window.Window):
     def __init__(self):
         pyglet.window.Window.__init__(self, fullscreen=True, caption="Void")
-        world_aabb = box2d.b2AABB()
-        world_aabb.lowerBound.Set(-100.0, -100.0)
-        world_aabb.upperBound.Set(100.0, 100.0)
-        gravity = box2d.b2Vec2(0.0, 0.0)
-        self.world = box2d.b2World(world_aabb, gravity, False)
-        ship_body_def = box2d.b2BodyDef()
-        ship_body_def.position.Set(0.0, 0.0)
-        self.ship_body = self.world.CreateBody(ship_body_def)
-        ship_shape_def = box2d.b2PolygonDef()
-        ship_shape_def.setVertices_tuple([(-1.0, -1.0), (1.0, -1.0),
-                                          (0.0, 2.0)])
-        ship_shape_def.density = 1.0
-        self.ship_body.CreateShape(ship_shape_def)
-        self.ship_body.SetMassFromShapes()
+        self.create_world()
+        self.create_ship_body()
         self.ship_thrusting = False
         self.ship_firing = False
         self.ship_max_angular_velocity = 2.0 * math.pi
@@ -198,6 +186,24 @@ class VoidWindow(pyglet.window.Window):
         asteroid.rotation = random.random() * 2.0 * math.pi
         asteroid.rotation_speed = (-1.0 + 2.0 * random.random()) * 1.0
         return asteroid
+
+    def create_world(self):
+        world_aabb = box2d.b2AABB()
+        world_aabb.lowerBound.Set(-100.0, -100.0)
+        world_aabb.upperBound.Set(100.0, 100.0)
+        gravity = box2d.b2Vec2(0.0, 0.0)
+        self.world = box2d.b2World(world_aabb, gravity, False)
+
+    def create_ship_body(self):
+        ship_body_def = box2d.b2BodyDef()
+        ship_body_def.position.Set(0.0, 0.0)
+        self.ship_body = self.world.CreateBody(ship_body_def)
+        ship_shape_def = box2d.b2PolygonDef()
+        ship_shape_def.setVertices_tuple([(-1.0, -1.0), (1.0, -1.0),
+                                          (0.0, 2.0)])
+        ship_shape_def.density = 1.0
+        self.ship_body.CreateShape(ship_shape_def)
+        self.ship_body.SetMassFromShapes()
 
 def main():
     window = VoidWindow()
