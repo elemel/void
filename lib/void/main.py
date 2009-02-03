@@ -22,6 +22,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 import sys, random, math, numpy, pyglet
+import Box2D2 as box2d
 from pyglet.gl import *
 
 class Body(object):
@@ -49,43 +50,6 @@ class Body(object):
 
     def draw_geometry(self):
         pass
-
-class Ship(Body):
-    radius = 1.0
-    max_velocity = 15.0
-    max_rotation_speed = 5.0
-    shot_velocity = 10.0
-    gun_pos = 1.5
-    max_thrust = 0.5
-
-    def __init__(self, groups, created_at, create_shot):
-        Body.__init__(self, groups, created_at)
-        self.create_shot = create_shot
-        self.thrusting = False
-        self.firing = False
-        self.cooldown = 0.2
-        self.fired_at = 0.0
-
-    def update(self, delta_time):
-        Body.update(self, delta_time)
-        self.update_velocity(delta_time)
-        self.update_cannon(delta_time)
-        
-    def update_velocity(self, delta_time):
-        self.velocity += (self.thrusting * self.max_thrust
-                          * numpy.array([math.cos(self.rotation),
-                                         math.sin(self.rotation)]))
-
-    def update_cannon(self, delta_time):
-        pass
-
-    def draw_geometry(self):
-        glBegin(GL_TRIANGLES)
-        glColor3d(0.0, 1.0, 0.0)
-        glVertex2d(-1.0, -1.0)
-        glVertex2d(0.0, 2.0)
-        glVertex2d(1.0, -1.0)
-        glEnd()
 
 class Asteroid(Body):
     radius = 2.0
@@ -137,20 +101,37 @@ class Plasma(Body):
 class VoidWindow(pyglet.window.Window):
     def __init__(self):
         pyglet.window.Window.__init__(self, fullscreen=True, caption="Void")
+        world_aabb = box2d.b2AABB()
+        world_aabb.lowerBound.Set(-100.0, -100.0)
+        world_aabb.upperBound.Set(100.0, 100.0)
+        gravity = box2d.b2Vec2(0.0, 0.0)
+        self.world = box2d.b2World(world_aabb, gravity, False)
+        ship_body_def = box2d.b2BodyDef()
+        ship_body_def.position.Set(0.0, 0.0)
+        self.ship_body = self.world.CreateBody(ship_body_def)
+        ship_shape_def = box2d.b2PolygonDef()
+        ship_shape_def.setVertices_tuple([(-1.0, -1.0), (1.0, -1.0),
+                                          (0.0, 2.0)])
+        ship_shape_def.density = 1.0
+        self.ship_body.CreateShape(ship_shape_def)
+        self.ship_body.SetMassFromShapes()
+        self.ship_thrusting = False
+        self.ship_firing = False
+        self.ship_max_angular_velocity = 2.0 * math.pi
         pyglet.clock.schedule_interval(self.update, 1.0 / 60.0)
-        def create_shot():
-            shot = Plasma([], 0.0)
-            return shot
-        self.player_ship = Ship([], 0.0, create_shot)
         self.asteroids = []
         for _ in xrange(20):
             self.asteroids.append(self.generate_asteroid())
 
     def update(self, dt):
-        self.player_ship.update(dt)
+        if self.ship_thrusting:
+            angle = self.ship_body.GetAngle()
+            force = 50.0 * box2d.b2Vec2(math.cos(angle), math.sin(angle))
+            point = self.ship_body.GetPosition()
+            self.ship_body.ApplyForce(force, point)
+        self.world.Step(dt, 10, 8)
         for asteroid in self.asteroids:
             asteroid.update(dt)
-        self.apply_player_ship_constraints()
         
     def on_draw(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
@@ -158,9 +139,20 @@ class VoidWindow(pyglet.window.Window):
         glPushMatrix()
         glTranslated(self.width / 2.0, self.height / 2.0, 0.0)
         glScaled(15.0, 15.0, 15.0)
-        x, y = self.player_ship.pos
-        glTranslated(-x, -y, 0.0)
-        self.player_ship.draw()
+        position = self.ship_body.GetPosition()
+        glTranslated(-position.x, -position.y, 0.0)
+        ship_shape = self.ship_body.GetShapeList()
+        polygon = ship_shape.asPolygon()
+        glPushMatrix()
+        glTranslated(position.x, position.y, 0.0)
+        glRotated((self.ship_body.GetAngle() * 180.0) / math.pi - 90.0,
+                  0.0, 0.0, 1.0)
+        glBegin(GL_TRIANGLES)
+        glColor3d(0.0, 1.0, 0.0)
+        for x, y in polygon.getCoreVertices_tuple():
+            glVertex2d(x, y)
+        glEnd()
+        glPopMatrix()
         for asteroid in self.asteroids:
             asteroid.draw()
         glPopMatrix()
@@ -169,23 +161,21 @@ class VoidWindow(pyglet.window.Window):
         if symbol == pyglet.window.key.ESCAPE:
             sys,exit()
         if symbol == pyglet.window.key.UP:
-            self.player_ship.thrusting = True
+            self.ship_thrusting = True
         if symbol == pyglet.window.key.SPACE:
-            self.player_ship.firing = True
+            self.ship_firing = True
         if symbol == pyglet.window.key.LEFT:
-            self.player_ship.rotation_speed = \
-                self.player_ship.max_rotation_speed
+            self.ship_body.SetAngularVelocity(self.ship_max_angular_velocity)
         if symbol == pyglet.window.key.RIGHT:
-            self.player_ship.rotation_speed = \
-                -self.player_ship.max_rotation_speed
+            self.ship_body.SetAngularVelocity(-self.ship_max_angular_velocity)
 
     def on_key_release(self, symbol, modifiers):
         if symbol == pyglet.window.key.UP:
-            self.player_ship.thrusting = False
+            self.ship_thrusting = False
         if symbol == pyglet.window.key.SPACE:
-            self.player_ship.firing = False
+            self.ship_firing = False
         if symbol in (pyglet.window.key.LEFT, pyglet.window.key.RIGHT):
-            self.player_ship.rotation_speed = 0.0
+            self.ship_body.SetAngularVelocity(0.0)
 
     def generate_asteroid(self):
         asteroid = Asteroid.generate([], 0.0)
@@ -201,12 +191,6 @@ class VoidWindow(pyglet.window.Window):
         asteroid.rotation = random.random() * 2.0 * math.pi
         asteroid.rotation_speed = (-1.0 + 2.0 * random.random()) * 1.0
         return asteroid
-
-    def apply_player_ship_constraints(self):
-        velocity_mag = numpy.linalg.norm(self.player_ship.velocity)
-        if velocity_mag > self.player_ship.max_velocity:
-            self.player_ship.velocity *= (self.player_ship.max_velocity /
-                                          velocity_mag)
 
 def main():
     window = VoidWindow()
