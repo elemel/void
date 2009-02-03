@@ -42,7 +42,7 @@ class VoidWindow(pyglet.window.Window):
     def update(self, dt):
         if self.ship_thrusting:
             angle = self.ship_body.GetAngle()
-            force = 100.0 * box2d.b2Vec2(math.cos(angle), math.sin(angle))
+            force = 100.0 * box2d.b2Vec2(-math.sin(angle), math.cos(angle))
             point = self.ship_body.GetPosition()
             self.ship_body.ApplyForce(force, point)
         self.world.Step(dt, 10, 8)
@@ -73,7 +73,7 @@ class VoidWindow(pyglet.window.Window):
         polygon = shape.asPolygon()
         glPushMatrix()
         glTranslated(position.x, position.y, 0.0)
-        glRotated(angle * 180.0 / math.pi - 90.0, 0.0, 0.0, 1.0)
+        glRotated(angle * 180.0 / math.pi, 0.0, 0.0, 1.0)
         glBegin(GL_POLYGON)
         glColor3d(*color)
         for x, y in polygon.getCoreVertices_tuple():
