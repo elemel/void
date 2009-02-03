@@ -102,21 +102,6 @@ class VoidWindow(pyglet.window.Window):
         if symbol in (pyglet.window.key.LEFT, pyglet.window.key.RIGHT):
             self.ship_body.SetAngularVelocity(0.0)
 
-    def generate_asteroid(self):
-        asteroid = Asteroid.generate([], 0.0)
-        angle = 2.0 * math.pi * random.random()
-        dist = 15.0 + 15.0 * random.random()
-        asteroid.pos = dist * numpy.array([math.cos(angle), math.sin(angle)])
-        if asteroid.pos.any():
-            unit = asteroid.pos / numpy.linalg.norm(asteroid.pos)
-            asteroid.velocity = (-unit * asteroid.max_velocity *
-                                 (0.5 + 0.5 * random.random()))
-        else:
-            asteroid.velocity = numpy.array([0.0, 0.0])
-        asteroid.rotation = random.random() * 2.0 * math.pi
-        asteroid.rotation_speed = (-1.0 + 2.0 * random.random()) * 1.0
-        return asteroid
-
     def create_world(self):
         world_aabb = box2d.b2AABB()
         world_aabb.lowerBound.Set(-200.0, -200.0)
