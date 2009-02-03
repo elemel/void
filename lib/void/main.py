@@ -130,7 +130,7 @@ class VoidWindow(pyglet.window.Window):
         asteroid_body_def.position.Set(x, y)
         asteroid_body = self.world.CreateBody(asteroid_body_def)
         asteroid_shape_def = box2d.b2PolygonDef()
-        radius = 3.0 + 2.0 * random.random()
+        radius = 2.0 + 5.0 * random.random()
         vertices = []
         for i in xrange(5):
             angle = (i + random.random()) / 5.0 * 2.0 * math.pi
