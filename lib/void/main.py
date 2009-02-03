@@ -142,8 +142,7 @@ class VoidWindow(pyglet.window.Window):
         position = self.ship_body.GetPosition()
         glTranslated(-position.x, -position.y, 0.0)
         self.draw_ship()
-        for asteroid in self.asteroids:
-            asteroid.draw()
+        self.draw_asteroids()
         glPopMatrix()
 
     def draw_ship(self):
@@ -160,6 +159,10 @@ class VoidWindow(pyglet.window.Window):
             glVertex2d(x, y)
         glEnd()
         glPopMatrix()
+
+    def draw_asteroids(self):
+        for asteroid in self.asteroids:
+            asteroid.draw()
 
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.ESCAPE:
