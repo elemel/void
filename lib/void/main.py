@@ -60,11 +60,12 @@ class VoidWindow(pyglet.window.Window):
         glPopMatrix()
 
     def draw_ship(self):
-        self.draw_body(self.ship_body, (0.0, 1.0, 0.0))
+        self.draw_body(self.ship_body, (1.0, 1.0, 1.0))
 
     def draw_asteroids(self):
         for asteroid_body in self.asteroid_bodies:
-            self.draw_body(asteroid_body, (0.0, 0.0, 1.0))
+            color = asteroid_body.GetUserData()
+            self.draw_body(asteroid_body, color)
 
     def draw_body(self, body, color):
         position = body.GetPosition()
@@ -159,6 +160,10 @@ class VoidWindow(pyglet.window.Window):
         asteroid_body.SetLinearVelocity(box2d.b2Vec2(2.0 * random.random(),
                                                      2.0 * random.random()))
         asteroid_body.SetAngularVelocity(math.pi * (random.random() - 0.5))
+        color = (0.5 * random.random(),
+                 0.5 * random.random(),
+                 0.5 * random.random() + 0.5)
+        asteroid_body.SetUserData(color)
         self.asteroid_bodies.append(asteroid_body)
 
 def main():
