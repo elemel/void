@@ -29,6 +29,7 @@ class Shot(Agent):
     def __init__(self, world, ship):
         self.world = world
         self.ship = ship
+        self.color = (1.0, 0.0, 0.0)
         self.body = self.create_body(world, ship)
 
     def create_body(self, world, ship):

@@ -61,25 +61,10 @@ class VoidWindow(pyglet.window.Window):
         position = self.ship.body.GetPosition()
         glTranslated(-position.x, -position.y, 0.0)
         for shot in self.shots:
-            self.draw_body(shot.body, (1.0, 0.0, 0.0))
-        self.draw_body(self.ship.body, (1.0, 1.0, 1.0))
+            shot.draw()
+        self.ship.draw()
         for asteroid in self.asteroids:
-            self.draw_body(asteroid.body, asteroid.color)
-        glPopMatrix()
-
-    def draw_body(self, body, color):
-        position = body.GetPosition()
-        angle = body.GetAngle()
-        shape = body.GetShapeList()
-        polygon = shape.asPolygon()
-        glPushMatrix()
-        glTranslated(position.x, position.y, 0.0)
-        glRotated(angle * 180.0 / math.pi, 0.0, 0.0, 1.0)
-        glBegin(GL_POLYGON)
-        glColor3d(*color)
-        for x, y in polygon.getCoreVertices_tuple():
-            glVertex2d(x, y)
-        glEnd()
+            asteroid.draw()
         glPopMatrix()
 
     def on_key_press(self, symbol, modifiers):

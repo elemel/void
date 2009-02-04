@@ -28,6 +28,7 @@ import void.box2d as box2d
 class Ship(Agent):
     def __init__(self, world):
         self.world = world
+        self.color = (1.0, 1.0, 1.0)
         self.thrusting = False
         self.firing = False
         self.cooldown = 0.0
