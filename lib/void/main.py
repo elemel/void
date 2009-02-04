@@ -31,11 +31,13 @@ class VoidWindow(pyglet.window.Window):
         self.set_mouse_visible(False)
         self.create_world()
         self.create_ship_body()
+        self.shot_bodies = []
         self.asteroid_bodies = []
         for _ in xrange(20):
             self.create_asteroid_body()
         self.ship_thrusting = False
         self.ship_firing = False
+        self.ship_cooldown = 0.0
         self.ship_max_angular_velocity = 2.0 * math.pi
         pyglet.clock.schedule_interval(self.update, 1.0 / 60.0)
 
@@ -45,6 +47,10 @@ class VoidWindow(pyglet.window.Window):
             force = 100.0 * box2d.b2Vec2(-math.sin(angle), math.cos(angle))
             point = self.ship_body.GetPosition()
             self.ship_body.ApplyForce(force, point)
+        self.ship_cooldown -= dt
+        if self.ship_firing and self.ship_cooldown <= 0.0:
+            self.create_shot_body()
+            self.ship_cooldown = 0.1
         self.world.Step(dt, 10, 8)
         
     def on_draw(self):
@@ -55,12 +61,17 @@ class VoidWindow(pyglet.window.Window):
         glScaled(15.0, 15.0, 15.0)
         position = self.ship_body.GetPosition()
         glTranslated(-position.x, -position.y, 0.0)
+        self.draw_shots()
         self.draw_ship()
         self.draw_asteroids()
         glPopMatrix()
 
     def draw_ship(self):
         self.draw_body(self.ship_body, (1.0, 1.0, 1.0))
+
+    def draw_shots(self):
+        for shot_body in self.shot_bodies:
+            self.draw_body(shot_body, (1.0, 0.0, 0.0))
 
     def draw_asteroids(self):
         for asteroid_body in self.asteroid_bodies:
@@ -123,6 +134,26 @@ class VoidWindow(pyglet.window.Window):
         ship_shape_def.filter.maskBits = 0x0002
         self.ship_body.CreateShape(ship_shape_def)
         self.ship_body.SetMassFromShapes()
+
+    def create_shot_body(self):
+        angle = self.ship_body.GetAngle()
+        shot_body_def = box2d.b2BodyDef()
+        shot_body_def.position = self.ship_body.GetPosition()
+        shot_body_def.angle = angle
+        shot_body = self.world.CreateBody(shot_body_def)
+        shot_shape_def = box2d.b2PolygonDef()
+        shot_shape_def.setVertices_tuple([(-0.2, -0.2), (0.2, -0.2),
+                                          (0.2, 0.2), (-0.2, 0.2)])
+        shot_shape_def.density = 10.0
+        shot_shape_def.restitution = 1.0
+        shot_shape_def.filter.categoryBits = 0x0001
+        shot_shape_def.filter.maskBits = 0x0002
+        shot_body.CreateShape(shot_shape_def)
+        shot_body.SetMassFromShapes()
+        linear_velocity = (self.ship_body.GetLinearVelocity() +
+                           10.0 * box2d.b2Vec2(-math.sin(angle), math.cos(angle)))
+        shot_body.SetLinearVelocity(linear_velocity)
+        self.shot_bodies.append(shot_body)
 
     def create_asteroid_body(self):
         angle = 2.0 * math.pi * random.random()
