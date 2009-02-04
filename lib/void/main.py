@@ -23,6 +23,7 @@
 
 import sys, random, math, numpy, pyglet
 from pyglet.gl import *
+from void.asteroid import Asteroid
 import void.box2d as box2d
 from void.ship import Ship
 from void.shot import Shot
@@ -34,9 +35,9 @@ class VoidWindow(pyglet.window.Window):
         self.world = self.create_world()
         self.ship = Ship(self.world)
         self.shots = []
-        self.asteroid_bodies = []
+        self.asteroids = []
         for _ in xrange(20):
-            self.create_asteroid_body()
+            self.asteroids.append(Asteroid(self.world))
         pyglet.clock.schedule_interval(self.update, 1.0 / 60.0)
 
     def update(self, dt):
@@ -59,22 +60,12 @@ class VoidWindow(pyglet.window.Window):
         glScaled(15.0, 15.0, 15.0)
         position = self.ship.body.GetPosition()
         glTranslated(-position.x, -position.y, 0.0)
-        self.draw_shots()
-        self.draw_ship()
-        self.draw_asteroids()
-        glPopMatrix()
-
-    def draw_ship(self):
-        self.draw_body(self.ship.body, (1.0, 1.0, 1.0))
-
-    def draw_shots(self):
         for shot in self.shots:
             self.draw_body(shot.body, (1.0, 0.0, 0.0))
-
-    def draw_asteroids(self):
-        for asteroid_body in self.asteroid_bodies:
-            color = asteroid_body.GetUserData()
-            self.draw_body(asteroid_body, color)
+        self.draw_body(self.ship.body, (1.0, 1.0, 1.0))
+        for asteroid in self.asteroids:
+            self.draw_body(asteroid.body, asteroid.color)
+        glPopMatrix()
 
     def draw_body(self, body, color):
         position = body.GetPosition()
@@ -117,40 +108,6 @@ class VoidWindow(pyglet.window.Window):
         world_aabb.upperBound.Set(200.0, 200.0)
         gravity = box2d.b2Vec2(0.0, 0.0)
         return box2d.b2World(world_aabb, gravity, False)
-
-    def create_asteroid_body(self):
-        angle = 2.0 * math.pi * random.random()
-        distance = 15.0 + 15.0 * random.random()
-        x = distance * math.cos(angle)
-        y = distance * math.sin(angle)
-        asteroid_body_def = box2d.b2BodyDef()
-        asteroid_body_def.position.Set(x, y)
-        asteroid_body_def.angle = 2.0 * math.pi * random.random()
-        asteroid_body = self.world.CreateBody(asteroid_body_def)
-        asteroid_shape_def = box2d.b2PolygonDef()
-        radius = 2.0 + 5.0 * random.random()
-        vertices = []
-        for i in xrange(5):
-            angle = (i + random.random()) / 5.0 * 2.0 * math.pi
-            x = radius * math.cos(angle)
-            y = radius * math.sin(angle)
-            vertices.append((x, y))
-        asteroid_shape_def.setVertices_tuple(vertices)
-        asteroid_shape_def.density = 4.0 + random.random()
-        asteroid_shape_def.restitution = 1.0
-        asteroid_shape_def.filter.categoryBits = 0x0002
-        asteroid_shape_def.filter.maskBits = 0x0001
-        asteroid_body.CreateShape(asteroid_shape_def)
-        asteroid_body.SetMassFromShapes()
-        linear_velocity = 3.0 * box2d.b2Vec2(random.random() - 0.5,
-                                             random.random() - 0.5)
-        asteroid_body.SetLinearVelocity(linear_velocity)
-        asteroid_body.SetAngularVelocity(random.random() - 0.5)
-        color = (0.5 * random.random(),
-                 0.5 * random.random(),
-                 0.5 * random.random() + 0.5)
-        asteroid_body.SetUserData(color)
-        self.asteroid_bodies.append(asteroid_body)
 
 def main():
     window = VoidWindow()
