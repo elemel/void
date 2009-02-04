@@ -29,31 +29,50 @@ class Agent(object):
     pass
     
 class Ship(Agent):
-    def __init__(self):
+    def __init__(self, world):
+        self.world = world
         self.thrusting = False
         self.firing = False
         self.cooldown = 0.0
         self.max_angular_velocity = 2.0 * math.pi
+        self.body = self.create_body(world)
+
+    def create_body(self, world):
+        body_def = box2d.b2BodyDef()
+        body_def.position.Set(0.0, 0.0)
+        body_def.angle = 2.0 * math.pi * random.random()
+
+        shape_def = box2d.b2PolygonDef()
+        shape_def.setVertices_tuple([(-1.0, -1.0), (1.0, -1.0), (0.0, 2.0)])
+        shape_def.density = 2.0
+        shape_def.restitution = 1.0
+        shape_def.filter.categoryBits = 0x0001
+        shape_def.filter.maskBits = 0x0002
+
+        body = world.CreateBody(body_def)
+        body.CreateShape(shape_def)
+        body.SetMassFromShapes()
+        body.SetUserData(self)
+        return body
 
 class VoidWindow(pyglet.window.Window):
     def __init__(self):
         pyglet.window.Window.__init__(self, fullscreen=True, caption="Void")
         self.set_mouse_visible(False)
         self.create_world()
-        self.create_ship_body()
+        self.ship = Ship(self.world)
         self.shot_bodies = []
         self.asteroid_bodies = []
         for _ in xrange(20):
             self.create_asteroid_body()
-        self.ship = Ship()
         pyglet.clock.schedule_interval(self.update, 1.0 / 60.0)
 
     def update(self, dt):
         if self.ship.thrusting:
-            angle = self.ship_body.GetAngle()
+            angle = self.ship.body.GetAngle()
             force = 100.0 * box2d.b2Vec2(-math.sin(angle), math.cos(angle))
-            point = self.ship_body.GetPosition()
-            self.ship_body.ApplyForce(force, point)
+            point = self.ship.body.GetPosition()
+            self.ship.body.ApplyForce(force, point)
         self.ship.cooldown -= dt
         if self.ship.firing and self.ship.cooldown <= 0.0:
             self.create_shot_body()
@@ -66,7 +85,7 @@ class VoidWindow(pyglet.window.Window):
         glPushMatrix()
         glTranslated(self.width / 2.0, self.height / 2.0, 0.0)
         glScaled(15.0, 15.0, 15.0)
-        position = self.ship_body.GetPosition()
+        position = self.ship.body.GetPosition()
         glTranslated(-position.x, -position.y, 0.0)
         self.draw_shots()
         self.draw_ship()
@@ -74,7 +93,7 @@ class VoidWindow(pyglet.window.Window):
         glPopMatrix()
 
     def draw_ship(self):
-        self.draw_body(self.ship_body, (1.0, 1.0, 1.0))
+        self.draw_body(self.ship.body, (1.0, 1.0, 1.0))
 
     def draw_shots(self):
         for shot_body in self.shot_bodies:
@@ -108,9 +127,9 @@ class VoidWindow(pyglet.window.Window):
         if symbol == pyglet.window.key.SPACE:
             self.ship.firing = True
         if symbol == pyglet.window.key.LEFT:
-            self.ship_body.SetAngularVelocity(self.ship.max_angular_velocity)
+            self.ship.body.SetAngularVelocity(self.ship.max_angular_velocity)
         if symbol == pyglet.window.key.RIGHT:
-            self.ship_body.SetAngularVelocity(-self.ship.max_angular_velocity)
+            self.ship.body.SetAngularVelocity(-self.ship.max_angular_velocity)
 
     def on_key_release(self, symbol, modifiers):
         if symbol == pyglet.window.key.UP:
@@ -118,7 +137,7 @@ class VoidWindow(pyglet.window.Window):
         if symbol == pyglet.window.key.SPACE:
             self.ship.firing = False
         if symbol in (pyglet.window.key.LEFT, pyglet.window.key.RIGHT):
-            self.ship_body.SetAngularVelocity(0.0)
+            self.ship.body.SetAngularVelocity(0.0)
 
     def create_world(self):
         world_aabb = box2d.b2AABB()
@@ -127,25 +146,10 @@ class VoidWindow(pyglet.window.Window):
         gravity = box2d.b2Vec2(0.0, 0.0)
         self.world = box2d.b2World(world_aabb, gravity, False)
 
-    def create_ship_body(self):
-        ship_body_def = box2d.b2BodyDef()
-        ship_body_def.position.Set(0.0, 0.0)
-        ship_body_def.angle = 2.0 * math.pi * random.random()
-        self.ship_body = self.world.CreateBody(ship_body_def)
-        ship_shape_def = box2d.b2PolygonDef()
-        ship_shape_def.setVertices_tuple([(-1.0, -1.0), (1.0, -1.0),
-                                          (0.0, 2.0)])
-        ship_shape_def.density = 2.0
-        ship_shape_def.restitution = 1.0
-        ship_shape_def.filter.categoryBits = 0x0001
-        ship_shape_def.filter.maskBits = 0x0002
-        self.ship_body.CreateShape(ship_shape_def)
-        self.ship_body.SetMassFromShapes()
-
     def create_shot_body(self):
-        angle = self.ship_body.GetAngle()
+        angle = self.ship.body.GetAngle()
         shot_body_def = box2d.b2BodyDef()
-        shot_body_def.position = self.ship_body.GetPosition()
+        shot_body_def.position = self.ship.body.GetPosition()
         shot_body_def.angle = angle
         shot_body = self.world.CreateBody(shot_body_def)
         shot_shape_def = box2d.b2PolygonDef()
@@ -157,7 +161,7 @@ class VoidWindow(pyglet.window.Window):
         shot_shape_def.filter.maskBits = 0x0002
         shot_body.CreateShape(shot_shape_def)
         shot_body.SetMassFromShapes()
-        linear_velocity = (self.ship_body.GetLinearVelocity() +
+        linear_velocity = (self.ship.body.GetLinearVelocity() +
                            10.0 * box2d.b2Vec2(-math.sin(angle), math.cos(angle)))
         shot_body.SetLinearVelocity(linear_velocity)
         self.shot_bodies.append(shot_body)
