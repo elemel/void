@@ -25,6 +25,7 @@ import sys, random, math, numpy, pyglet
 from pyglet.gl import *
 import void.box2d as box2d
 from void.ship import Ship
+from void.shot import Shot
 
 class VoidWindow(pyglet.window.Window):
     def __init__(self):
@@ -32,7 +33,7 @@ class VoidWindow(pyglet.window.Window):
         self.set_mouse_visible(False)
         self.world = self.create_world()
         self.ship = Ship(self.world)
-        self.shot_bodies = []
+        self.shots = []
         self.asteroid_bodies = []
         for _ in xrange(20):
             self.create_asteroid_body()
@@ -46,7 +47,7 @@ class VoidWindow(pyglet.window.Window):
             self.ship.body.ApplyForce(force, point)
         self.ship.cooldown -= dt
         if self.ship.firing and self.ship.cooldown <= 0.0:
-            self.create_shot_body()
+            self.shots.append(Shot(self.world, self.ship))
             self.ship.cooldown = 0.1
         self.world.Step(dt, 10, 8)
         
@@ -67,8 +68,8 @@ class VoidWindow(pyglet.window.Window):
         self.draw_body(self.ship.body, (1.0, 1.0, 1.0))
 
     def draw_shots(self):
-        for shot_body in self.shot_bodies:
-            self.draw_body(shot_body, (1.0, 0.0, 0.0))
+        for shot in self.shots:
+            self.draw_body(shot.body, (1.0, 0.0, 0.0))
 
     def draw_asteroids(self):
         for asteroid_body in self.asteroid_bodies:
@@ -116,26 +117,6 @@ class VoidWindow(pyglet.window.Window):
         world_aabb.upperBound.Set(200.0, 200.0)
         gravity = box2d.b2Vec2(0.0, 0.0)
         return box2d.b2World(world_aabb, gravity, False)
-
-    def create_shot_body(self):
-        angle = self.ship.body.GetAngle()
-        shot_body_def = box2d.b2BodyDef()
-        shot_body_def.position = self.ship.body.GetPosition()
-        shot_body_def.angle = angle
-        shot_body = self.world.CreateBody(shot_body_def)
-        shot_shape_def = box2d.b2PolygonDef()
-        shot_shape_def.setVertices_tuple([(-0.2, -0.2), (0.2, -0.2),
-                                          (0.2, 0.2), (-0.2, 0.2)])
-        shot_shape_def.density = 1.0
-        shot_shape_def.restitution = 1.0
-        shot_shape_def.filter.categoryBits = 0x0001
-        shot_shape_def.filter.maskBits = 0x0002
-        shot_body.CreateShape(shot_shape_def)
-        shot_body.SetMassFromShapes()
-        linear_velocity = (self.ship.body.GetLinearVelocity() +
-                           20.0 * box2d.b2Vec2(-math.sin(angle), math.cos(angle)))
-        shot_body.SetLinearVelocity(linear_velocity)
-        self.shot_bodies.append(shot_body)
 
     def create_asteroid_body(self):
         angle = 2.0 * math.pi * random.random()
