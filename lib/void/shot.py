@@ -36,7 +36,7 @@ class Shot(Agent):
         body_def = box2d.b2BodyDef()
         body_def.position = ship.body.GetPosition()
         body_def.angle = angle
-        body = world.CreateBody(body_def)
+
         shape_def = box2d.b2PolygonDef()
         shape_def.setVertices_tuple([(-0.2, -0.2), (0.2, -0.2),
                                      (0.2, 0.2), (-0.2, 0.2)])
@@ -44,6 +44,9 @@ class Shot(Agent):
         shape_def.restitution = 1.0
         shape_def.filter.categoryBits = 0x0001
         shape_def.filter.maskBits = 0x0002
+
+        body = world.CreateBody(body_def)
+        body.SetBullet(True)
         body.CreateShape(shape_def)
         body.SetMassFromShapes()
         linear_velocity = (ship.body.GetLinearVelocity() +
