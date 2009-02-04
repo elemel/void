@@ -25,6 +25,16 @@ import sys, random, math, numpy, pyglet
 import Box2D2 as box2d
 from pyglet.gl import *
 
+class Agent(object):
+    pass
+    
+class Ship(Agent):
+    def __init__(self):
+        self.thrusting = False
+        self.firing = False
+        self.cooldown = 0.0
+        self.max_angular_velocity = 2.0 * math.pi
+
 class VoidWindow(pyglet.window.Window):
     def __init__(self):
         pyglet.window.Window.__init__(self, fullscreen=True, caption="Void")
@@ -35,22 +45,19 @@ class VoidWindow(pyglet.window.Window):
         self.asteroid_bodies = []
         for _ in xrange(20):
             self.create_asteroid_body()
-        self.ship_thrusting = False
-        self.ship_firing = False
-        self.ship_cooldown = 0.0
-        self.ship_max_angular_velocity = 2.0 * math.pi
+        self.ship = Ship()
         pyglet.clock.schedule_interval(self.update, 1.0 / 60.0)
 
     def update(self, dt):
-        if self.ship_thrusting:
+        if self.ship.thrusting:
             angle = self.ship_body.GetAngle()
             force = 100.0 * box2d.b2Vec2(-math.sin(angle), math.cos(angle))
             point = self.ship_body.GetPosition()
             self.ship_body.ApplyForce(force, point)
-        self.ship_cooldown -= dt
-        if self.ship_firing and self.ship_cooldown <= 0.0:
+        self.ship.cooldown -= dt
+        if self.ship.firing and self.ship.cooldown <= 0.0:
             self.create_shot_body()
-            self.ship_cooldown = 0.1
+            self.ship.cooldown = 0.1
         self.world.Step(dt, 10, 8)
         
     def on_draw(self):
@@ -97,19 +104,19 @@ class VoidWindow(pyglet.window.Window):
         if symbol == pyglet.window.key.ESCAPE:
             sys.exit()
         if symbol == pyglet.window.key.UP:
-            self.ship_thrusting = True
+            self.ship.thrusting = True
         if symbol == pyglet.window.key.SPACE:
-            self.ship_firing = True
+            self.ship.firing = True
         if symbol == pyglet.window.key.LEFT:
-            self.ship_body.SetAngularVelocity(self.ship_max_angular_velocity)
+            self.ship_body.SetAngularVelocity(self.ship.max_angular_velocity)
         if symbol == pyglet.window.key.RIGHT:
-            self.ship_body.SetAngularVelocity(-self.ship_max_angular_velocity)
+            self.ship_body.SetAngularVelocity(-self.ship.max_angular_velocity)
 
     def on_key_release(self, symbol, modifiers):
         if symbol == pyglet.window.key.UP:
-            self.ship_thrusting = False
+            self.ship.thrusting = False
         if symbol == pyglet.window.key.SPACE:
-            self.ship_firing = False
+            self.ship.firing = False
         if symbol in (pyglet.window.key.LEFT, pyglet.window.key.RIGHT):
             self.ship_body.SetAngularVelocity(0.0)
 
