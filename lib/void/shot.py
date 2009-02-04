@@ -50,4 +50,5 @@ class Shot(Agent):
                            20.0 * box2d.b2Vec2(-math.sin(angle),
                                                math.cos(angle)))
         body.SetLinearVelocity(linear_velocity)
+        body.SetUserData(self)
         return body
