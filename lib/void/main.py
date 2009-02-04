@@ -30,7 +30,7 @@ class VoidWindow(pyglet.window.Window):
     def __init__(self):
         pyglet.window.Window.__init__(self, fullscreen=True, caption="Void")
         self.set_mouse_visible(False)
-        self.create_world()
+        self.world = self.create_world()
         self.ship = Ship(self.world)
         self.shot_bodies = []
         self.asteroid_bodies = []
@@ -115,7 +115,7 @@ class VoidWindow(pyglet.window.Window):
         world_aabb.lowerBound.Set(-200.0, -200.0)
         world_aabb.upperBound.Set(200.0, 200.0)
         gravity = box2d.b2Vec2(0.0, 0.0)
-        self.world = box2d.b2World(world_aabb, gravity, False)
+        return box2d.b2World(world_aabb, gravity, False)
 
     def create_shot_body(self):
         angle = self.ship.body.GetAngle()
