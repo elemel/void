@@ -126,7 +126,7 @@ class VoidWindow(pyglet.window.Window):
         shot_shape_def = box2d.b2PolygonDef()
         shot_shape_def.setVertices_tuple([(-0.2, -0.2), (0.2, -0.2),
                                           (0.2, 0.2), (-0.2, 0.2)])
-        shot_shape_def.density = 10.0
+        shot_shape_def.density = 1.0
         shot_shape_def.restitution = 1.0
         shot_shape_def.filter.categoryBits = 0x0001
         shot_shape_def.filter.maskBits = 0x0002
