@@ -133,7 +133,7 @@ class VoidWindow(pyglet.window.Window):
         shot_body.CreateShape(shot_shape_def)
         shot_body.SetMassFromShapes()
         linear_velocity = (self.ship.body.GetLinearVelocity() +
-                           10.0 * box2d.b2Vec2(-math.sin(angle), math.cos(angle)))
+                           20.0 * box2d.b2Vec2(-math.sin(angle), math.cos(angle)))
         shot_body.SetLinearVelocity(linear_velocity)
         self.shot_bodies.append(shot_body)
 
