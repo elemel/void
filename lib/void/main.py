@@ -22,38 +22,9 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 import sys, random, math, numpy, pyglet
-import Box2D2 as box2d
 from pyglet.gl import *
-
-class Agent(object):
-    pass
-    
-class Ship(Agent):
-    def __init__(self, world):
-        self.world = world
-        self.thrusting = False
-        self.firing = False
-        self.cooldown = 0.0
-        self.max_angular_velocity = 2.0 * math.pi
-        self.body = self.create_body(world)
-
-    def create_body(self, world):
-        body_def = box2d.b2BodyDef()
-        body_def.position.Set(0.0, 0.0)
-        body_def.angle = 2.0 * math.pi * random.random()
-
-        shape_def = box2d.b2PolygonDef()
-        shape_def.setVertices_tuple([(-1.0, -1.0), (1.0, -1.0), (0.0, 2.0)])
-        shape_def.density = 2.0
-        shape_def.restitution = 1.0
-        shape_def.filter.categoryBits = 0x0001
-        shape_def.filter.maskBits = 0x0002
-
-        body = world.CreateBody(body_def)
-        body.CreateShape(shape_def)
-        body.SetMassFromShapes()
-        body.SetUserData(self)
-        return body
+import void.box2d as box2d
+from void.ship import Ship
 
 class VoidWindow(pyglet.window.Window):
     def __init__(self):
