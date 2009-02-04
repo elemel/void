@@ -95,7 +95,7 @@ class VoidWindow(pyglet.window.Window):
 
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.ESCAPE:
-            sys,exit()
+            sys.exit()
         if symbol == pyglet.window.key.UP:
             self.ship_thrusting = True
         if symbol == pyglet.window.key.SPACE:
