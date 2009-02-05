@@ -38,9 +38,9 @@ class VoidWindow(pyglet.window.Window):
         self.asteroids = []
         for _ in xrange(20):
             self.asteroids.append(Asteroid(self.world))
-        pyglet.clock.schedule_interval(self.update, 1.0 / 60.0)
+        pyglet.clock.schedule_interval(self.step, 1.0 / 60.0)
 
-    def update(self, dt):
+    def step(self, dt):
         if self.ship.thrusting:
             angle = self.ship.body.GetAngle()
             force = 100.0 * box2d.b2Vec2(-math.sin(angle), math.cos(angle))
