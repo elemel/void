@@ -64,4 +64,4 @@ class Ship(Agent):
         self.cooldown -= dt
         if self.firing and self.cooldown <= 0.0:
             self.shots.append(Shot(self.world, self))
-            self.cooldown = 0.1
+            self.cooldown = 0.2
