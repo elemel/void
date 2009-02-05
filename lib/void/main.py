@@ -114,10 +114,10 @@ class VoidWindow(pyglet.window.Window):
             self.world.DestroyJoint(joint_edge.joint)
             return
         angle = self.ship.body.GetAngle()
+        unit = box2d.b2Vec2(-math.sin(angle), math.cos(angle))
         segment = box2d.b2Segment()
         segment.p1 = self.ship.body.GetPosition()
-        segment.p2 = segment.p1 + 20.0 * box2d.b2Vec2(-math.sin(angle),
-                                                      math.cos(angle))
+        segment.p2 = self.ship.body.GetPosition() + 15.0 * unit
         fraction, normal, shape = self.world.RaycastOne(segment, False, None)
         if shape is not None:
             agent = shape.GetBody().GetUserData()
