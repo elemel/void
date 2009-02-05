@@ -24,10 +24,12 @@
 import math, random
 from void.agent import Agent
 import void.box2d as box2d
+from void.shot import Shot
 
 class Ship(Agent):
-    def __init__(self, world):
+    def __init__(self, world, shots):
         self.world = world
+        self.shots = shots
         self.color = (1.0, 1.0, 1.0)
         self.thrusting = False
         self.firing = False
@@ -52,3 +54,14 @@ class Ship(Agent):
         body.SetMassFromShapes()
         body.SetUserData(self)
         return body
+
+    def step(self, dt):
+        if self.thrusting:
+            angle = self.body.GetAngle()
+            force = 100.0 * box2d.b2Vec2(-math.sin(angle), math.cos(angle))
+            point = self.body.GetPosition()
+            self.body.ApplyForce(force, point)
+        self.cooldown -= dt
+        if self.firing and self.cooldown <= 0.0:
+            self.shots.append(Shot(self.world, self))
+            self.cooldown = 0.1

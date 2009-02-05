@@ -26,30 +26,21 @@ from pyglet.gl import *
 from void.asteroid import Asteroid
 import void.box2d as box2d
 from void.ship import Ship
-from void.shot import Shot
 
 class VoidWindow(pyglet.window.Window):
     def __init__(self):
         pyglet.window.Window.__init__(self, fullscreen=True, caption="Void")
         self.set_mouse_visible(False)
         self.world = self.create_world()
-        self.ship = Ship(self.world)
         self.shots = []
+        self.ship = Ship(self.world, self.shots)
         self.asteroids = []
         for _ in xrange(20):
             self.asteroids.append(Asteroid(self.world))
         pyglet.clock.schedule_interval(self.step, 1.0 / 60.0)
 
     def step(self, dt):
-        if self.ship.thrusting:
-            angle = self.ship.body.GetAngle()
-            force = 100.0 * box2d.b2Vec2(-math.sin(angle), math.cos(angle))
-            point = self.ship.body.GetPosition()
-            self.ship.body.ApplyForce(force, point)
-        self.ship.cooldown -= dt
-        if self.ship.firing and self.ship.cooldown <= 0.0:
-            self.shots.append(Shot(self.world, self.ship))
-            self.ship.cooldown = 0.1
+        self.ship.step(dt)
         self.world.Step(dt, 10, 8)
         
     def on_draw(self):
