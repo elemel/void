@@ -52,6 +52,7 @@ class VoidWindow(pyglet.window.Window):
         position = self.ship.body.GetPosition()
         glTranslated(-position.x, -position.y, 0.0)
         self.draw_leash(position)
+        self.draw_towline()
         for shot in self.shots:
             shot.draw()
         self.ship.draw()
@@ -66,6 +67,18 @@ class VoidWindow(pyglet.window.Window):
         glVertex2d(position.x, position.y)
         glEnd()
 
+    def draw_towline(self):
+        joint_edge = self.ship.body.GetJointList()
+        if joint_edge is not None:
+            joint = joint_edge.joint
+            anchor_1 = joint.GetAnchor1()
+            anchor_2 = joint.GetAnchor2()
+            glBegin(GL_LINES)
+            glColor3d(0.5, 0.5, 0.5)
+            glVertex2d(anchor_1.x, anchor_1.y)
+            glVertex2d(anchor_2.x, anchor_2.y)
+            glEnd()
+
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.ESCAPE:
             sys.exit()
@@ -77,6 +90,8 @@ class VoidWindow(pyglet.window.Window):
             self.ship.turning = 1.0
         if symbol == pyglet.window.key.RIGHT:
             self.ship.turning = -1.0
+        if symbol == pyglet.window.key.ENTER:
+            self.toggle_towline()
 
     def on_key_release(self, symbol, modifiers):
         if symbol == pyglet.window.key.UP:
@@ -92,6 +107,26 @@ class VoidWindow(pyglet.window.Window):
         world_aabb.upperBound.Set(200.0, 200.0)
         gravity = box2d.b2Vec2(0.0, 0.0)
         return box2d.b2World(world_aabb, gravity, False)
+
+    def toggle_towline(self):
+        joint_edge = self.ship.body.GetJointList()
+        if joint_edge is not None:
+            self.world.DestroyJoint(joint_edge.joint)
+            return
+        angle = self.ship.body.GetAngle()
+        segment = box2d.b2Segment()
+        segment.p1 = self.ship.body.GetPosition()
+        segment.p2 = segment.p1 + 20.0 * box2d.b2Vec2(-math.sin(angle),
+                                                      math.cos(angle))
+        fraction, normal, shape = self.world.RaycastOne(segment, False, None)
+        if shape is not None:
+            agent = shape.GetBody().GetUserData()
+            joint_def = box2d.b2DistanceJointDef()
+            joint_def.Initialize(self.ship.body, agent.body,
+                                 self.ship.body.GetPosition(),
+                                 agent.body.GetPosition())
+            joint_def.collideConnected = True
+            self.world.CreateJoint(joint_def)
 
 def main():
     window = VoidWindow()
