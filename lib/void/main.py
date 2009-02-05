@@ -62,7 +62,7 @@ class VoidWindow(pyglet.window.Window):
 
     def draw_leash(self, position):
         glBegin(GL_LINES)
-        glColor3d(0.0, 0.5, 0.0)
+        glColor3d(0.0, 1.0, 0.0)
         glVertex2d(0.0, 0.0)
         glVertex2d(position.x, position.y)
         glEnd()
@@ -74,7 +74,7 @@ class VoidWindow(pyglet.window.Window):
             anchor_1 = joint.GetAnchor1()
             anchor_2 = joint.GetAnchor2()
             glBegin(GL_LINES)
-            glColor3d(0.5, 0.5, 0.5)
+            glColor3d(1.0, 0.0, 1.0)
             glVertex2d(anchor_1.x, anchor_1.y)
             glVertex2d(anchor_2.x, anchor_2.y)
             glEnd()
