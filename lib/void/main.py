@@ -26,12 +26,16 @@ from pyglet.gl import *
 from void.asteroid import Asteroid
 import void.box2d as box2d
 from void.ship import Ship
+from void.shot import Shot
 
 class VoidWindow(pyglet.window.Window):
     def __init__(self):
         pyglet.window.Window.__init__(self, fullscreen=True, caption="Void")
         self.set_mouse_visible(False)
         self.world = self.create_world()
+        self.contact_results = []
+        self.contact_listener = VoidContactListener(self)
+        self.world.SetContactListener(self.contact_listener)
         self.shots = []
         self.ship = Ship(self.world, self.shots)
         self.asteroids = []
@@ -42,6 +46,19 @@ class VoidWindow(pyglet.window.Window):
     def step(self, dt):
         self.ship.step(dt)
         self.world.Step(dt, 10, 8)
+        destroy_agents = set()
+        for agent_1, agent_2 in self.contact_results:
+            if (type(agent_1) is Shot and type(agent_2) is Asteroid or
+                type(agent_1) is Asteroid and type(agent_2) is Shot):
+                destroy_agents.add(agent_1)
+                destroy_agents.add(agent_2)
+        for agent in destroy_agents:
+            self.world.DestroyBody(agent.body)
+            if type(agent) is Shot:
+                self.shots.remove(agent)
+            if type(agent) is Asteroid:
+                self.asteroids.remove(agent)
+        del self.contact_results[:]
         
     def on_draw(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
@@ -127,6 +144,28 @@ class VoidWindow(pyglet.window.Window):
                                  agent.body.GetPosition())
             joint_def.collideConnected = True
             self.world.CreateJoint(joint_def)
+
+    def contact_result(self, point):
+        agent_1 = point.shape1.GetBody().GetUserData()
+        agent_2 = point.shape2.GetBody().GetUserData()
+        self.contact_results.append((agent_1, agent_2))
+
+class VoidContactListener(box2d.b2ContactListener):
+    def __init__(self, window):
+        super(VoidContactListener, self).__init__() 
+        self.window = window
+
+    def Add(self, point):
+        pass
+
+    def Persist(self, point):
+        pass
+
+    def Remove(self, point):
+        pass
+
+    def Result(self, point):
+        self.window.contact_result(point)
 
 def main():
     window = VoidWindow()
