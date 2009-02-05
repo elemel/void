@@ -66,9 +66,9 @@ class VoidWindow(pyglet.window.Window):
         if symbol == pyglet.window.key.SPACE:
             self.ship.firing = True
         if symbol == pyglet.window.key.LEFT:
-            self.ship.body.SetAngularVelocity(self.ship.max_angular_velocity)
+            self.ship.turning = 1.0
         if symbol == pyglet.window.key.RIGHT:
-            self.ship.body.SetAngularVelocity(-self.ship.max_angular_velocity)
+            self.ship.turning = -1.0
 
     def on_key_release(self, symbol, modifiers):
         if symbol == pyglet.window.key.UP:
@@ -76,7 +76,7 @@ class VoidWindow(pyglet.window.Window):
         if symbol == pyglet.window.key.SPACE:
             self.ship.firing = False
         if symbol in (pyglet.window.key.LEFT, pyglet.window.key.RIGHT):
-            self.ship.body.SetAngularVelocity(0.0)
+            self.ship.turning = 0.0
 
     def create_world(self):
         world_aabb = box2d.b2AABB()

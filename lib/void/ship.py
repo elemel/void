@@ -33,6 +33,7 @@ class Ship(Agent):
         self.color = (1.0, 1.0, 1.0)
         self.thrusting = False
         self.firing = False
+        self.turning = 0.0
         self.cooldown = 0.0
         self.max_angular_velocity = 2.0 * math.pi
         self.body = self.create_body(world)
@@ -65,3 +66,5 @@ class Ship(Agent):
         if self.firing and self.cooldown <= 0.0:
             self.shots.append(Shot(self.world, self))
             self.cooldown = 0.2
+        self.body.SetAngularVelocity(self.turning *
+                                     self.max_angular_velocity)
