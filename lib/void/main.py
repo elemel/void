@@ -51,12 +51,20 @@ class VoidWindow(pyglet.window.Window):
         glScaled(15.0, 15.0, 15.0)
         position = self.ship.body.GetPosition()
         glTranslated(-position.x, -position.y, 0.0)
+        self.draw_leash(position)
         for shot in self.shots:
             shot.draw()
         self.ship.draw()
         for asteroid in self.asteroids:
             asteroid.draw()
         glPopMatrix()
+
+    def draw_leash(self, position):
+        glBegin(GL_LINES)
+        glColor3d(0.0, 0.5, 0.0)
+        glVertex2d(0.0, 0.0)
+        glVertex2d(position.x, position.y)
+        glEnd()
 
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.ESCAPE:
