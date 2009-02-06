@@ -108,7 +108,7 @@ class VoidWindow(pyglet.window.Window):
         if symbol == pyglet.window.key.RIGHT:
             self.ship.turning = -1.0
         if symbol == pyglet.window.key.ENTER:
-            self.toggle_towline()
+            self.ship.toggle_towline()
 
     def on_key_release(self, symbol, modifiers):
         if symbol == pyglet.window.key.UP:
@@ -124,26 +124,6 @@ class VoidWindow(pyglet.window.Window):
         world_aabb.upperBound.Set(200.0, 200.0)
         gravity = box2d.b2Vec2(0.0, 0.0)
         return box2d.b2World(world_aabb, gravity, False)
-
-    def toggle_towline(self):
-        joint_edge = self.ship.body.GetJointList()
-        if joint_edge is not None:
-            self.world.DestroyJoint(joint_edge.joint)
-            return
-        angle = self.ship.body.GetAngle()
-        unit = box2d.b2Vec2(-math.sin(angle), math.cos(angle))
-        segment = box2d.b2Segment()
-        segment.p1 = self.ship.body.GetPosition()
-        segment.p2 = self.ship.body.GetPosition() + 15.0 * unit
-        fraction, normal, shape = self.world.RaycastOne(segment, False, None)
-        if shape is not None:
-            agent = shape.GetBody().GetUserData()
-            joint_def = box2d.b2DistanceJointDef()
-            joint_def.Initialize(self.ship.body, agent.body,
-                                 self.ship.body.GetPosition(),
-                                 agent.body.GetPosition())
-            joint_def.collideConnected = True
-            self.world.CreateJoint(joint_def)
 
     def contact_result(self, point):
         agent_1 = point.shape1.GetBody().GetUserData()

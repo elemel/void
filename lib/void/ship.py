@@ -59,7 +59,7 @@ class Ship(Agent):
     def step(self, dt):
         if self.thrusting:
             angle = self.body.GetAngle()
-            force = 100.0 * box2d.b2Vec2(-math.sin(angle), math.cos(angle))
+            force = 200.0 * box2d.b2Vec2(-math.sin(angle), math.cos(angle))
             point = self.body.GetPosition()
             self.body.ApplyForce(force, point)
         self.cooldown -= dt
@@ -68,3 +68,22 @@ class Ship(Agent):
             self.cooldown = 0.2
         self.body.SetAngularVelocity(self.turning *
                                      self.max_angular_velocity)
+
+    def toggle_towline(self):
+        joint_edge = self.body.GetJointList()
+        if joint_edge is not None:
+            self.world.DestroyJoint(joint_edge.joint)
+            return
+        angle = self.body.GetAngle()
+        unit = box2d.b2Vec2(-math.sin(angle), math.cos(angle))
+        segment = box2d.b2Segment()
+        segment.p1 = self.body.GetPosition()
+        segment.p2 = self.body.GetPosition() + 15.0 * unit
+        fraction, normal, shape = self.world.RaycastOne(segment, False, None)
+        if shape is not None:
+            agent = shape.GetBody().GetUserData()
+            joint_def = box2d.b2DistanceJointDef()
+            joint_def.Initialize(self.body, agent.body, self.body.GetPosition(),
+                                 agent.body.GetPosition())
+            joint_def.collideConnected = True
+            self.world.CreateJoint(joint_def)
