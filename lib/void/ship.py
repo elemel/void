@@ -75,7 +75,7 @@ class Ship(Agent):
             self.world.DestroyJoint(joint_edge.joint)
             return
         angle = self.body.GetAngle()
-        unit = box2d.b2Vec2(-math.sin(angle), math.cos(angle))
+        unit = -box2d.b2Vec2(-math.sin(angle), math.cos(angle))
         segment = box2d.b2Segment()
         segment.p1 = self.body.GetPosition()
         segment.p2 = self.body.GetPosition() + 15.0 * unit
