@@ -26,42 +26,63 @@ from void.agent import Agent
 import void.box2d as box2d
 
 class Asteroid(Agent):
-    def __init__(self, world):
+    def __init__(self, world, radius=None, position=None,
+                 linear_velocity=None):
         self.world = world
-        self.color = (0.5 * random.random(),
-                      0.5 * random.random(),
+        if radius is None:
+            radius = 3.0 * (1.0 + random.random())
+        if position is None:
+            angle = 2.0 * math.pi * random.random()
+            unit = box2d.b2Vec2(-math.sin(angle), math.cos(angle))
+            distance = 15.0 * (1.0 + random.random())
+            position = unit * distance
+        if linear_velocity is None:
+            angle = 2.0 * math.pi * random.random()
+            unit = box2d.b2Vec2(-math.sin(angle), math.cos(angle))
+            linear_velocity = unit * 4.0 * (1.0 + random.random())
+        self.radius = radius
+        self.color = (0.5 * random.random(), 0.5 * random.random(),
                       0.5 * random.random() + 0.5)
-        self.body = self.create_body(world)
+        self.body = self.create_body(position, linear_velocity)
 
-    def create_body(self, world):
-        angle = 2.0 * math.pi * random.random()
-        distance = 15.0 + 15.0 * random.random()
-        x = distance * math.cos(angle)
-        y = distance * math.sin(angle)
+    def create_body(self, position, linear_velocity):
         body_def = box2d.b2BodyDef()
-        body_def.position.Set(x, y)
+        body_def.position = position
         body_def.angle = 2.0 * math.pi * random.random()
 
         shape_def = box2d.b2PolygonDef()
-        radius = 2.0 + 5.0 * random.random()
         vertices = []
         for i in xrange(5):
             angle = (i + random.random()) / 5.0 * 2.0 * math.pi
-            x = radius * math.cos(angle)
-            y = radius * math.sin(angle)
+            x = self.radius * math.cos(angle)
+            y = self.radius * math.sin(angle)
             vertices.append((x, y))
         shape_def.setVertices_tuple(vertices)
-        shape_def.density = 4.0 + random.random()
+        shape_def.density = 1.0
         shape_def.restitution = 1.0
         shape_def.filter.categoryBits = 0x0002
         shape_def.filter.maskBits = 0x0001
 
-        body = world.CreateBody(body_def)
+        body = self.world.CreateBody(body_def)
         body.CreateShape(shape_def)
         body.SetMassFromShapes()
-        linear_velocity = 3.0 * box2d.b2Vec2(random.random() - 0.5,
-                                             random.random() - 0.5)
         body.SetLinearVelocity(linear_velocity)
         body.SetAngularVelocity(random.random() - 0.5)
         body.SetUserData(self)
         return body
+
+    def split(self):
+        if self.radius < 2.0:
+            return []
+        fraction = (1.0 + random.random()) / 3.0
+        radius_1 = self.radius * math.sqrt(fraction)
+        radius_2 = math.sqrt(self.radius ** 2 - radius_1 ** 2)
+        position = self.body.GetPosition()
+        angle = random.random() * 2.0 * math.pi
+        unit = box2d.b2Vec2(-math.sin(angle), math.cos(angle))
+        position_1 = position + unit * radius_2
+        position_2 = position - unit * radius_1
+        linear_velocity = self.body.GetLinearVelocity()
+        agent_1 = Asteroid(self.world, radius_1, position_1, linear_velocity)
+        agent_2 = Asteroid(self.world, radius_2, position_2, linear_velocity)
+        return agent_1, agent_2

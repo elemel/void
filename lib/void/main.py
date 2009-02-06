@@ -25,6 +25,7 @@ import sys, random, math, numpy, pyglet
 from pyglet.gl import *
 from void.asteroid import Asteroid
 import void.box2d as box2d
+from void.hub import Hub
 from void.ship import Ship
 from void.shot import Shot
 
@@ -36,6 +37,7 @@ class VoidWindow(pyglet.window.Window):
         self.contact_results = []
         self.contact_listener = VoidContactListener(self)
         self.world.SetContactListener(self.contact_listener)
+        self.hub = Hub(self.world)
         self.shots = []
         self.ship = Ship(self.world, self.shots)
         self.asteroids = []
@@ -53,11 +55,12 @@ class VoidWindow(pyglet.window.Window):
                 destroy_agents.add(agent_1)
                 destroy_agents.add(agent_2)
         for agent in destroy_agents:
-            self.world.DestroyBody(agent.body)
             if type(agent) is Shot:
                 self.shots.remove(agent)
             if type(agent) is Asteroid:
+                self.asteroids.extend(agent.split())
                 self.asteroids.remove(agent)
+            self.world.DestroyBody(agent.body)
         del self.contact_results[:]
         
     def on_draw(self):
@@ -72,6 +75,7 @@ class VoidWindow(pyglet.window.Window):
         self.draw_towline()
         for shot in self.shots:
             shot.draw()
+        self.hub.draw()
         self.ship.draw()
         for asteroid in self.asteroids:
             asteroid.draw()
