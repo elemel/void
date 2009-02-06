@@ -104,23 +104,25 @@ class VoidWindow(pyglet.window.Window):
         if symbol == pyglet.window.key.ESCAPE:
             sys.exit()
         if symbol == pyglet.window.key.UP:
-            self.ship.thrusting = True
+            self.ship.thrust = 1.0
+        if symbol == pyglet.window.key.DOWN:
+            self.ship.thrust = -0.5
         if symbol == pyglet.window.key.SPACE:
             self.ship.firing = True
         if symbol == pyglet.window.key.LEFT:
-            self.ship.turning = 1.0
+            self.ship.turn = 1.0
         if symbol == pyglet.window.key.RIGHT:
-            self.ship.turning = -1.0
+            self.ship.turn = -1.0
         if symbol == pyglet.window.key.ENTER:
             self.ship.toggle_towline()
 
     def on_key_release(self, symbol, modifiers):
         if symbol == pyglet.window.key.UP:
-            self.ship.thrusting = False
+            self.ship.thrust = 0.0
         if symbol == pyglet.window.key.SPACE:
             self.ship.firing = False
         if symbol in (pyglet.window.key.LEFT, pyglet.window.key.RIGHT):
-            self.ship.turning = 0.0
+            self.ship.turn = 0.0
 
     def create_world(self):
         world_aabb = box2d.b2AABB()

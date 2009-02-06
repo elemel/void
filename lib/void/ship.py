@@ -31,9 +31,9 @@ class Ship(Agent):
         self.world = world
         self.shots = shots
         self.color = (1.0, 1.0, 1.0)
-        self.thrusting = False
+        self.thrust = False
         self.firing = False
-        self.turning = 0.0
+        self.turn = 0.0
         self.cooldown = 0.0
         self.max_angular_velocity = 2.0 * math.pi
         self.body = self.create_body(world)
@@ -57,16 +57,16 @@ class Ship(Agent):
         return body
 
     def step(self, dt):
-        if self.thrusting:
-            angle = self.body.GetAngle()
-            force = 200.0 * box2d.b2Vec2(-math.sin(angle), math.cos(angle))
-            point = self.body.GetPosition()
-            self.body.ApplyForce(force, point)
+        angle = self.body.GetAngle()
+        force = self.thrust * 200.0 * box2d.b2Vec2(-math.sin(angle),
+                                                   math.cos(angle))
+        point = self.body.GetPosition()
+        self.body.ApplyForce(force, point)
         self.cooldown -= dt
         if self.firing and self.cooldown <= 0.0:
             self.shots.append(Shot(self.world, self))
             self.cooldown = 0.2
-        self.body.SetAngularVelocity(self.turning *
+        self.body.SetAngularVelocity(self.turn *
                                      self.max_angular_velocity)
 
     def toggle_towline(self):
