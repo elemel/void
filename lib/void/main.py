@@ -80,6 +80,7 @@ class VoidWindow(pyglet.window.Window):
         max_count = 100
         (count, shapes) = self.world.Query(aabb, max_count)
         agents = set(shape.GetBody().GetUserData() for shape in shapes)
+        agents = sorted(agents, key=id)
         return agents
     
     def draw_lifeline(self):
