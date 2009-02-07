@@ -37,6 +37,8 @@ class Ship(Agent):
         self.max_cooldown = 0.3
         self.cooldown = 0.0
         self.max_angular_velocity = 2.0 * math.pi
+        self.max_towing_range = 10.0
+        self.max_towing_capacity = 20.0
         self.body = self.create_body(world)
 
     def create_body(self, world):
@@ -78,17 +80,28 @@ class Ship(Agent):
 
         position = self.body.GetPosition()
         aabb = box2d.b2AABB()
-        aabb.lowerBound.Set(position.x - 10.0, position.y - 10.0)
-        aabb.upperBound.Set(position.x + 10.0, position.y + 10.0)
+        aabb.lowerBound.Set(position.x - self.max_towing_range,
+                            position.y - self.max_towing_range)
+        aabb.upperBound.Set(position.x + self.max_towing_range,
+                            position.y + self.max_towing_range)
         max_count = 100
         (count, shapes) = self.world.Query(aabb, max_count)
-        agents = set(shape.GetBody().GetUserData() for shape in shapes)
-        asteroids = list(agent for agent in agents if type(agent) is Asteroid)
-        if asteroids:
-            asteroid = random.choice(asteroids)
+        targets = set(shape.GetBody().GetUserData() for shape in shapes)
+        targets = list(target for target in targets if self.can_tow(target))
+        if targets:
+            target = random.choice(targets)
             joint_def = box2d.b2DistanceJointDef()
-            joint_def.Initialize(self.body, asteroid.body,
+            joint_def.Initialize(self.body, target.body,
                                  self.body.GetPosition(),
-                                 asteroid.body.GetPosition())
+                                 target.body.GetPosition())
             joint_def.collideConnected = True
             self.world.CreateJoint(joint_def)
+
+    def can_tow(self, other):
+        if type(other) is not Asteroid:
+            return False
+        if other.body.GetMass() > self.max_towing_capacity:
+            return False
+        offset = self.body.GetPosition() - other.body.GetPosition()
+        distance = math.sqrt(offset.x ** 2 + offset.y ** 2)
+        return distance <= self.max_towing_range
