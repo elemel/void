@@ -38,11 +38,9 @@ class VoidWindow(pyglet.window.Window):
         self.contact_listener = VoidContactListener(self)
         self.world.SetContactListener(self.contact_listener)
         self.hub = Hub(self.world)
-        self.shots = []
-        self.ship = Ship(self.world, self.shots)
-        self.asteroids = []
+        self.ship = Ship(self.world)
         for _ in xrange(20):
-            self.asteroids.append(Asteroid(self.world))
+            Asteroid(self.world)
         pyglet.clock.schedule_interval(self.step, 1.0 / 60.0)
 
     def step(self, dt):
@@ -55,11 +53,8 @@ class VoidWindow(pyglet.window.Window):
                 destroy_agents.add(agent_1)
                 destroy_agents.add(agent_2)
         for agent in destroy_agents:
-            if type(agent) is Shot:
-                self.shots.remove(agent)
             if type(agent) is Asteroid:
-                self.asteroids.extend(agent.split())
-                self.asteroids.remove(agent)
+                agent.split()
             self.world.DestroyBody(agent.body)
         del self.contact_results[:]
         
@@ -73,14 +68,20 @@ class VoidWindow(pyglet.window.Window):
         glTranslated(-position.x, -position.y, 0.0)
         self.draw_leash(position)
         self.draw_towline()
-        for shot in self.shots:
-            shot.draw()
-        self.hub.draw()
-        self.ship.draw()
-        for asteroid in self.asteroids:
-            asteroid.draw()
+        for agent in self.query_draw():
+            agent.draw()
         glPopMatrix()
 
+    def query_draw(self):
+        position = self.ship.body.GetPosition()
+        aabb = box2d.b2AABB()
+        aabb.lowerBound.Set(position.x - 40.0, position.y - 25.0)
+        aabb.upperBound.Set(position.x + 40.0, position.y + 25.0)
+        max_count = 100
+        (count, shapes) = self.world.Query(aabb, max_count)
+        agents = set(shape.GetBody().GetUserData() for shape in shapes)
+        return agents
+    
     def draw_leash(self, position):
         glBegin(GL_LINES)
         glColor3d(0.0, 1.0, 0.0)

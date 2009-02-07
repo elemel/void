@@ -27,9 +27,8 @@ import void.box2d as box2d
 from void.shot import Shot
 
 class Ship(Agent):
-    def __init__(self, world, shots):
+    def __init__(self, world):
         self.world = world
-        self.shots = shots
         self.color = (1.0, 1.0, 1.0)
         self.thrust = False
         self.firing = False
@@ -64,7 +63,7 @@ class Ship(Agent):
         self.body.ApplyForce(force, point)
         self.cooldown -= dt
         if self.firing and self.cooldown <= 0.0:
-            self.shots.append(Shot(self.world, self))
+            Shot(self.world, self)
             self.cooldown = 0.2
         self.body.SetAngularVelocity(self.turn *
                                      self.max_angular_velocity)
