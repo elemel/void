@@ -136,8 +136,8 @@ class VoidWindow(pyglet.window.Window):
 
     def create_world(self):
         world_aabb = box2d.b2AABB()
-        world_aabb.lowerBound.Set(-200.0, -200.0)
-        world_aabb.upperBound.Set(200.0, 200.0)
+        world_aabb.lowerBound.Set(-400.0, -400.0)
+        world_aabb.upperBound.Set(400.0, 400.0)
         gravity = box2d.b2Vec2(0.0, 0.0)
         return box2d.b2World(world_aabb, gravity, False)
 
