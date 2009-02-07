@@ -24,6 +24,7 @@
 import math, random
 from void.agent import Agent
 import void.box2d as box2d
+from void.asteroid import Asteroid
 from void.shot import Shot
 
 class Ship(Agent):
@@ -73,16 +74,20 @@ class Ship(Agent):
         if joint_edge is not None:
             self.world.DestroyJoint(joint_edge.joint)
             return
-        angle = self.body.GetAngle()
-        unit = -box2d.b2Vec2(-math.sin(angle), math.cos(angle))
-        segment = box2d.b2Segment()
-        segment.p1 = self.body.GetPosition()
-        segment.p2 = self.body.GetPosition() + 15.0 * unit
-        fraction, normal, shape = self.world.RaycastOne(segment, False, None)
-        if shape is not None:
-            agent = shape.GetBody().GetUserData()
+
+        position = self.body.GetPosition()
+        aabb = box2d.b2AABB()
+        aabb.lowerBound.Set(position.x - 10.0, position.y - 10.0)
+        aabb.upperBound.Set(position.x + 10.0, position.y + 10.0)
+        max_count = 100
+        (count, shapes) = self.world.Query(aabb, max_count)
+        agents = set(shape.GetBody().GetUserData() for shape in shapes)
+        asteroids = list(agent for agent in agents if type(agent) is Asteroid)
+        if asteroids:
+            asteroid = random.choice(asteroids)
             joint_def = box2d.b2DistanceJointDef()
-            joint_def.Initialize(self.body, agent.body, self.body.GetPosition(),
-                                 agent.body.GetPosition())
+            joint_def.Initialize(self.body, asteroid.body,
+                                 self.body.GetPosition(),
+                                 asteroid.body.GetPosition())
             joint_def.collideConnected = True
             self.world.CreateJoint(joint_def)
