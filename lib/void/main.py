@@ -66,7 +66,7 @@ class VoidWindow(pyglet.window.Window):
         glScaled(15.0, 15.0, 15.0)
         position = self.ship.body.GetPosition()
         glTranslated(-position.x, -position.y, 0.0)
-        self.draw_lifeline(position)
+        self.draw_lifeline()
         self.draw_towline()
         for agent in self.query_draw():
             agent.draw()
@@ -82,9 +82,18 @@ class VoidWindow(pyglet.window.Window):
         agents = set(shape.GetBody().GetUserData() for shape in shapes)
         return agents
     
-    def draw_lifeline(self, position):
+    def draw_lifeline(self):
+        position = self.ship.body.GetPosition()
+        distance = math.sqrt(position.x ** 2 + position.y ** 2)
+        fraction = distance / self.ship.max_lifeline_range
+        if fraction <= 0.5:
+            red = fraction * 2.0
+            green = 1.0
+        else:
+            red = 1.0
+            green = 1.0 - (fraction - 0.5) * 2.0
         glBegin(GL_LINES)
-        glColor3d(0.0, 1.0, 0.0)
+        glColor4d(red, green, 0.0, 1.0)
         glVertex2d(0.0, 0.0)
         glVertex2d(position.x, position.y)
         glEnd()
