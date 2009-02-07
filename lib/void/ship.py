@@ -34,7 +34,7 @@ class Ship(Agent):
         self.thrust = False
         self.firing = False
         self.turn = 0.0
-        self.max_cooldown = 0.3
+        self.max_cooldown = 0.2
         self.cooldown = 0.0
         self.max_angular_velocity = 2.0 * math.pi
         self.max_towing_range = 10.0

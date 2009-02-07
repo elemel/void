@@ -51,7 +51,7 @@ class Shot(Agent):
         body.CreateShape(shape_def)
         body.SetMassFromShapes()
         linear_velocity = (ship.body.GetLinearVelocity() +
-                           20.0 * box2d.b2Vec2(-math.sin(angle),
+                           25.0 * box2d.b2Vec2(-math.sin(angle),
                                                math.cos(angle)))
         body.SetLinearVelocity(linear_velocity)
         body.SetUserData(self)
