@@ -26,7 +26,7 @@ from void.agent import Agent
 import void.box2d as box2d
 
 class Asteroid(Agent):
-    def __init__(self, world, radius=None, position=None,
+    def __init__(self, world, ship=None, radius=None, position=None,
                  linear_velocity=None):
         self.world = world
         if radius is None:
@@ -34,8 +34,10 @@ class Asteroid(Agent):
         if position is None:
             angle = 2.0 * math.pi * random.random()
             unit = box2d.b2Vec2(-math.sin(angle), math.cos(angle))
-            distance = 15.0 * (1.0 + random.random())
+            distance = 50.0 * (1.0 + random.random())
             position = unit * distance
+            if ship is not None:
+                position += ship.body.GetPosition()
         if linear_velocity is None:
             angle = 2.0 * math.pi * random.random()
             unit = box2d.b2Vec2(-math.sin(angle), math.cos(angle))
@@ -83,6 +85,8 @@ class Asteroid(Agent):
         position_1 = position + unit * radius_2
         position_2 = position - unit * radius_1
         linear_velocity = self.body.GetLinearVelocity()
-        agent_1 = Asteroid(self.world, radius_1, position_1, linear_velocity)
-        agent_2 = Asteroid(self.world, radius_2, position_2, linear_velocity)
+        agent_1 = Asteroid(self.world, None, radius_1, position_1,
+                           linear_velocity)
+        agent_2 = Asteroid(self.world, None, radius_2, position_2,
+                           linear_velocity)
         return agent_1, agent_2

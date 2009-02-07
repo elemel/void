@@ -39,11 +39,11 @@ class VoidWindow(pyglet.window.Window):
         self.world.SetContactListener(self.contact_listener)
         self.hub = Hub(self.world)
         self.ship = Ship(self.world)
-        for _ in xrange(20):
-            Asteroid(self.world)
         pyglet.clock.schedule_interval(self.step, 1.0 / 60.0)
 
     def step(self, dt):
+        if random.random() <= dt:
+            Asteroid(self.world, self.ship)
         self.ship.step(dt)
         self.world.Step(dt, 10, 8)
         destroy_agents = set()
