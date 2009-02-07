@@ -21,7 +21,7 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-import math, random
+import math, random, sys
 from void.agent import Agent
 import void.box2d as box2d
 from void.asteroid import Asteroid
@@ -39,6 +39,7 @@ class Ship(Agent):
         self.max_angular_velocity = 2.0 * math.pi
         self.max_towing_range = 10.0
         self.max_towing_capacity = 20.0
+        self.max_lifeline_range = 100.0
         self.body = self.create_body(world)
 
     def create_body(self, world):
@@ -60,17 +61,20 @@ class Ship(Agent):
         return body
 
     def step(self, dt):
+        position = self.body.GetPosition()
+        distance = math.sqrt(position.x ** 2 + position.y ** 2)
+        if distance > self.max_lifeline_range:
+            print "Game Over: Out of Range"
+            sys.exit()
         angle = self.body.GetAngle()
         force = self.thrust * 200.0 * box2d.b2Vec2(-math.sin(angle),
                                                    math.cos(angle))
-        point = self.body.GetPosition()
-        self.body.ApplyForce(force, point)
+        self.body.ApplyForce(force, position)
         self.cooldown -= dt
         if self.firing and self.cooldown <= 0.0:
             Shot(self.world, self)
             self.cooldown = self.max_cooldown
-        self.body.SetAngularVelocity(self.turn *
-                                     self.max_angular_velocity)
+        self.body.SetAngularVelocity(self.turn * self.max_angular_velocity)
 
     def toggle_towline(self):
         joint_edge = self.body.GetJointList()
