@@ -37,7 +37,6 @@ class Ship(Agent):
         self.cooldown = 0.0
         self.max_angular_velocity = 2.0 * math.pi
         self.max_towing_range = 10.0
-        self.max_towing_capacity = 20.0
         self.max_lifeline_range = 200.0
         self.body = self.create_body(world)
 
@@ -98,8 +97,6 @@ class Ship(Agent):
 
     def can_tow(self, other):
         if type(other) is not Asteroid:
-            return False
-        if other.body.GetMass() > self.max_towing_capacity:
             return False
         offset = self.body.GetPosition() - other.body.GetPosition()
         distance = math.sqrt(offset.x ** 2 + offset.y ** 2)
