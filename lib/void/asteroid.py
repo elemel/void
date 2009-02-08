@@ -60,7 +60,7 @@ class Asteroid(Agent):
             y = self.radius * math.sin(angle)
             vertices.append((x, y))
         shape_def.setVertices_tuple(vertices)
-        shape_def.density = 1.0
+        shape_def.density = 2000.0
         shape_def.restitution = 1.0
         shape_def.filter.categoryBits = 0x0002
         shape_def.filter.maskBits = 0x0001

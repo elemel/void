@@ -33,6 +33,7 @@ class Ship(Agent):
         self.thrust = False
         self.firing = False
         self.turn = 0.0
+        self.max_thrust = 100000.0
         self.max_angular_velocity = 2.0 * math.pi
         self.max_towing_range = 15.0
         self.max_lifeline_range = 200.0
@@ -45,7 +46,7 @@ class Ship(Agent):
 
         shape_def = box2d.b2PolygonDef()
         shape_def.setVertices_tuple([(-1.0, -1.0), (1.0, -1.0), (0.0, 2.0)])
-        shape_def.density = 2.0
+        shape_def.density = 1000.0
         shape_def.restitution = 1.0
         shape_def.filter.categoryBits = 0x0001
         shape_def.filter.maskBits = 0x0002
@@ -63,8 +64,8 @@ class Ship(Agent):
             print "Game Over: Out of Range"
             sys.exit()
         angle = self.body.GetAngle()
-        force = self.thrust * 200.0 * box2d.b2Vec2(-math.sin(angle),
-                                                   math.cos(angle))
+        unit = box2d.b2Vec2(-math.sin(angle), math.cos(angle))
+        force = self.thrust * self.max_thrust * unit
         self.body.ApplyForce(force, position)
         self.body.SetAngularVelocity(self.turn * self.max_angular_velocity)
 
