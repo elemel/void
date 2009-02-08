@@ -37,6 +37,7 @@ class Ship(Agent):
         self.max_angular_velocity = 2.0 * math.pi
         self.max_towing_range = 15.0
         self.max_lifeline_range = 200.0
+        self.damage = 3.0
         self.body = self.create_body(world)
 
     def create_body(self, world):
