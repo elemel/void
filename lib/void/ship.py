@@ -36,7 +36,7 @@ class Ship(Agent):
         self.max_cooldown = 0.2
         self.cooldown = 0.0
         self.max_angular_velocity = 2.0 * math.pi
-        self.max_towing_range = 10.0
+        self.max_towing_range = 15.0
         self.max_lifeline_range = 200.0
         self.body = self.create_body(world)
 
