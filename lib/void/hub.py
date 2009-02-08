@@ -21,6 +21,7 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+import math
 from void.agent import Agent
 import void.box2d as box2d
 
@@ -35,8 +36,14 @@ class Hub(Agent):
         body_def.position.Set(0.0, 0.0)
 
         shape_def = box2d.b2PolygonDef()
-        shape_def.setVertices_tuple([(-3.0, -3.0), (3.0, -3.0), (3.0, 3.0),
-                                     (-3.0, 3.0)])
+        radius = 3.0
+        vertices = []
+        vertex_count = 16
+        for i in xrange(vertex_count):
+            angle = i * 2.0 * math.pi / vertex_count
+            vertex = radius * box2d.b2Vec2(-math.sin(angle), math.cos(angle))
+            vertices.append(vertex)
+        shape_def.setVertices_b2Vec2(vertices)
         shape_def.restitution = 1.0
         shape_def.filter.categoryBits = 0x0001
         shape_def.filter.maskBits = 0x0002
