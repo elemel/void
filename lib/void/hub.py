@@ -29,6 +29,7 @@ class Hub(Agent):
         self.world = world
         self.color = (0.5, 0.5, 0.0)
         self.body = self.create_body(world)
+        self.power = 1.0
 
     def create_body(self, world):
         body_def = box2d.b2BodyDef()

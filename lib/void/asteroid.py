@@ -46,6 +46,7 @@ class Asteroid(Agent):
         self.color = (0.5 * random.random(), 0.5 * random.random(),
                       0.5 * random.random() + 0.5)
         self.body = self.create_body(position, linear_velocity)
+        self.power = self.body.GetMass()
 
     def create_body(self, position, linear_velocity):
         body_def = box2d.b2BodyDef()

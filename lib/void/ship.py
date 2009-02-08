@@ -25,7 +25,6 @@ import math, random, sys
 from void.agent import Agent
 import void.box2d as box2d
 from void.asteroid import Asteroid
-from void.shot import Shot
 
 class Ship(Agent):
     def __init__(self, world):
@@ -41,6 +40,7 @@ class Ship(Agent):
         self.max_towing_capacity = 20.0
         self.max_lifeline_range = 200.0
         self.body = self.create_body(world)
+        self.power = 1.0
 
     def create_body(self, world):
         body_def = box2d.b2BodyDef()
@@ -70,10 +70,6 @@ class Ship(Agent):
         force = self.thrust * 200.0 * box2d.b2Vec2(-math.sin(angle),
                                                    math.cos(angle))
         self.body.ApplyForce(force, position)
-        self.cooldown -= dt
-        if self.firing and self.cooldown <= 0.0:
-            Shot(self.world, self)
-            self.cooldown = self.max_cooldown
         self.body.SetAngularVelocity(self.turn * self.max_angular_velocity)
 
     def toggle_towline(self):

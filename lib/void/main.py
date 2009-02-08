@@ -27,11 +27,12 @@ from void.asteroid import Asteroid
 import void.box2d as box2d
 from void.hub import Hub
 from void.ship import Ship
-from void.shot import Shot
 
 class VoidWindow(pyglet.window.Window):
     def __init__(self):
         pyglet.window.Window.__init__(self, fullscreen=True, caption="Void")
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         self.set_mouse_visible(False)
         self.world = self.create_world()
         self.contact_results = []
@@ -46,16 +47,30 @@ class VoidWindow(pyglet.window.Window):
             Asteroid(self.world, self.ship)
         self.ship.step(dt)
         self.world.Step(dt, 10, 8)
-        destroy_agents = set()
+        agents = set()
+        if self.ship.firing:
+            angle = self.ship.body.GetAngle()
+            unit = box2d.b2Vec2(-math.sin(angle), math.cos(angle))
+            segment = box2d.b2Segment()
+            segment.p1 = self.ship.body.GetPosition()
+            segment.p2 = segment.p1 + unit * 10.0
+            fraction, normal, shape = self.world.RaycastOne(segment, False,
+                                                            None)
+            if shape is not None:
+                agent = shape.GetBody().GetUserData()
+                if type(agent) is Asteroid:
+                    agents.add(agent)
+                    agent.power -= dt * fraction * 20.0
         for agent_1, agent_2 in self.contact_results:
-            if (type(agent_1) is Shot and type(agent_2) is Asteroid or
-                type(agent_1) is Asteroid and type(agent_2) is Shot):
-                destroy_agents.add(agent_1)
-                destroy_agents.add(agent_2)
-        for agent in destroy_agents:
-            if type(agent) is Asteroid:
-                agent.split()
-            self.world.DestroyBody(agent.body)
+            agents.add(agent_1)
+            agents.add(agent_2)
+            agent_1.collide(agent_2)
+            agent_2.collide(agent_1)
+        for agent in agents:
+            if agent.power <= 0.0:
+                if type(agent) is Asteroid:
+                    agent.split()
+                self.world.DestroyBody(agent.body)
         del self.contact_results[:]
         
     def on_draw(self):
@@ -68,6 +83,7 @@ class VoidWindow(pyglet.window.Window):
         glTranslated(-position.x, -position.y, 0.0)
         self.draw_lifeline()
         self.draw_towline()
+        self.draw_laser()
         for agent in self.query_draw():
             agent.draw()
         glPopMatrix()
@@ -111,6 +127,19 @@ class VoidWindow(pyglet.window.Window):
             glVertex2d(anchor_2.x, anchor_2.y)
             glEnd()
 
+    def draw_laser(self):
+        if self.ship.firing:
+            position = self.ship.body.GetPosition()
+            angle = self.ship.body.GetAngle()
+            unit = box2d.b2Vec2(-math.sin(angle), math.cos(angle))
+            endpoint = position + unit * 10.0
+            glBegin(GL_LINES)
+            glColor4d(1.0, 0.0, 0.0, 1.0)
+            glVertex2d(position.x, position.y)
+            glColor4d(1.0, 0.0, 0.0, 0.0)
+            glVertex2d(endpoint.x, endpoint.y)
+            glEnd()
+
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.ESCAPE:
             sys.exit()
@@ -129,6 +158,8 @@ class VoidWindow(pyglet.window.Window):
 
     def on_key_release(self, symbol, modifiers):
         if symbol == pyglet.window.key.UP:
+            self.ship.thrust = 0.0
+        if symbol == pyglet.window.key.DOWN:
             self.ship.thrust = 0.0
         if symbol == pyglet.window.key.SPACE:
             self.ship.firing = False

@@ -39,3 +39,6 @@ class Agent(object):
             glVertex2d(x, y)
         glEnd()
         glPopMatrix()
+        
+    def collide(self, other):
+        pass
