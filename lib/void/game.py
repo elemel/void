@@ -69,7 +69,7 @@ class Game(object):
                 agent = shape.GetBody().GetUserData()
                 if type(agent) is Asteroid:
                     maybe_dead.add(agent)
-                    agent.power -= dt * fraction
+                    agent.power -= dt * fraction * 10.0
         
     def on_draw(self):
         glScaled(15.0, 15.0, 15.0)
