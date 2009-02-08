@@ -25,6 +25,21 @@ import math
 from pyglet.gl import *
 
 class Agent(object):
+    def __init__(self, world):
+        self.world = world
+        self.alive = True
+        self.__power = 1.0
+
+    def __get_power(self):
+        return self.__power
+
+    def __set_power(self, power):
+        self.__power = power
+        if power <= 0.0:
+            self.alive = False
+
+    power = property(__get_power, __set_power)
+
     def draw(self):
         position = self.body.GetPosition()
         angle = self.body.GetAngle()

@@ -26,10 +26,9 @@ import void.box2d as box2d
 
 class Hub(Agent):
     def __init__(self, world):
-        self.world = world
+        super(Hub, self).__init__(world)
         self.color = (0.5, 0.5, 0.0)
         self.body = self.create_body(world)
-        self.power = 1.0
 
     def create_body(self, world):
         body_def = box2d.b2BodyDef()

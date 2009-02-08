@@ -28,7 +28,7 @@ import void.box2d as box2d
 class Asteroid(Agent):
     def __init__(self, world, ship=None, radius=None, position=None,
                  linear_velocity=None):
-        self.world = world
+        super(Asteroid, self).__init__(world)
         if radius is None:
             radius = 3.0 * (1.0 + random.random())
         if position is None:
@@ -46,7 +46,6 @@ class Asteroid(Agent):
         self.color = (0.5 * random.random(), 0.5 * random.random(),
                       0.5 * random.random() + 0.5)
         self.body = self.create_body(position, linear_velocity)
-        self.power = self.body.GetMass()
 
     def create_body(self, position, linear_velocity):
         body_def = box2d.b2BodyDef()

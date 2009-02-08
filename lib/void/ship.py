@@ -28,7 +28,7 @@ from void.asteroid import Asteroid
 
 class Ship(Agent):
     def __init__(self, world):
-        self.world = world
+        super(Ship, self).__init__(world)
         self.color = (1.0, 1.0, 1.0)
         self.thrust = False
         self.firing = False
@@ -40,7 +40,6 @@ class Ship(Agent):
         self.max_towing_capacity = 20.0
         self.max_lifeline_range = 200.0
         self.body = self.create_body(world)
-        self.power = 1.0
 
     def create_body(self, world):
         body_def = box2d.b2BodyDef()

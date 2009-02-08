@@ -43,11 +43,25 @@ class VoidWindow(pyglet.window.Window):
         pyglet.clock.schedule_interval(self.step, 1.0 / 60.0)
 
     def step(self, dt):
+        maybe_dead = set()
         if random.random() <= dt:
             Asteroid(self.world, self.ship)
         self.ship.step(dt)
+        self.step_laser(dt, maybe_dead)
         self.world.Step(dt, 10, 8)
-        agents = set()
+        for agent_1, agent_2 in self.contact_results:
+            maybe_dead.add(agent_1)
+            maybe_dead.add(agent_2)
+            agent_1.collide(agent_2)
+            agent_2.collide(agent_1)
+        for agent in maybe_dead:
+            if not agent.alive:
+                if type(agent) is Asteroid:
+                    agent.split()
+                self.world.DestroyBody(agent.body)
+        del self.contact_results[:]
+
+    def step_laser(self, dt, maybe_dead):
         if self.ship.firing:
             angle = self.ship.body.GetAngle()
             unit = box2d.b2Vec2(-math.sin(angle), math.cos(angle))
@@ -59,19 +73,8 @@ class VoidWindow(pyglet.window.Window):
             if shape is not None:
                 agent = shape.GetBody().GetUserData()
                 if type(agent) is Asteroid:
-                    agents.add(agent)
-                    agent.power -= dt * fraction * 20.0
-        for agent_1, agent_2 in self.contact_results:
-            agents.add(agent_1)
-            agents.add(agent_2)
-            agent_1.collide(agent_2)
-            agent_2.collide(agent_1)
-        for agent in agents:
-            if agent.power <= 0.0:
-                if type(agent) is Asteroid:
-                    agent.split()
-                self.world.DestroyBody(agent.body)
-        del self.contact_results[:]
+                    maybe_dead.add(agent)
+                    agent.power -= dt * fraction
         
     def on_draw(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
