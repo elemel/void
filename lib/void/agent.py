@@ -43,17 +43,20 @@ class Agent(object):
     def draw(self):
         position = self.body.GetPosition()
         angle = self.body.GetAngle()
-        shape = self.body.GetShapeList()
-        polygon = shape.asPolygon()
         glPushMatrix()
         glTranslated(position.x, position.y, 0.0)
         glRotated(angle * 180.0 / math.pi, 0.0, 0.0, 1.0)
+        self.draw_geometry()
+        glPopMatrix()
+
+    def draw_geometry(self):
+        shape = self.body.GetShapeList()
+        polygon = shape.asPolygon()
         glBegin(GL_POLYGON)
         glColor3d(*self.color)
         for x, y in polygon.getCoreVertices_tuple():
             glVertex2d(x, y)
         glEnd()
-        glPopMatrix()
         
     def collide(self, other):
         pass
