@@ -43,7 +43,7 @@ class Ship(Agent):
     def create_body(self, world):
         body_def = box2d.b2BodyDef()
         body_def.position.Set(0.0, 0.0)
-        body_def.angle = 2.0 * math.pi * random.random()
+        body_def.angle = -0.5 * math.pi
 
         shape_def = box2d.b2PolygonDef()
         shape_def.setVertices_tuple([(-1.0, -1.0), (1.0, -1.0), (0.0, 2.0)])

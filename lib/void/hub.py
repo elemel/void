@@ -22,28 +22,30 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 import math
+from pyglet.gl import *
 from void.agent import Agent
 import void.box2d as box2d
 
 class Hub(Agent):
     def __init__(self, world):
         super(Hub, self).__init__(world)
-        self.color = (0.5, 0.5, 0.0)
+        self.color = (1.0, 1.0, 1.0)
+        self.radius = 3.0
+        self.vertices = []
+        vertex_count = 90
+        for i in xrange(vertex_count):
+            angle = i * 2.0 * math.pi / vertex_count
+            vertex = self.radius * box2d.b2Vec2(-math.sin(angle),
+                                                math.cos(angle))
+            self.vertices.append(vertex)
         self.body = self.create_body(world)
 
     def create_body(self, world):
         body_def = box2d.b2BodyDef()
         body_def.position.Set(0.0, 0.0)
 
-        shape_def = box2d.b2PolygonDef()
-        radius = 3.0
-        vertices = []
-        vertex_count = 16
-        for i in xrange(vertex_count):
-            angle = i * 2.0 * math.pi / vertex_count
-            vertex = radius * box2d.b2Vec2(-math.sin(angle), math.cos(angle))
-            vertices.append(vertex)
-        shape_def.setVertices_b2Vec2(vertices)
+        shape_def = box2d.b2CircleDef()
+        shape_def.radius = self.radius
         shape_def.restitution = 1.0
         shape_def.filter.categoryBits = 0x0001
         shape_def.filter.maskBits = 0x0002
@@ -53,3 +55,10 @@ class Hub(Agent):
         body.SetMassFromShapes()
         body.SetUserData(self)
         return body
+
+    def draw_geometry(self):
+        glBegin(GL_LINE_LOOP)
+        glColor3d(*self.color)
+        for vertex in self.vertices:
+            glVertex2d(vertex.x, vertex.y)
+        glEnd()
