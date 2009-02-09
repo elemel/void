@@ -28,12 +28,36 @@ from void.game_screen import GameScreen
 class TitleScreen(object):
     def __init__(self, window):
         self.window = window
+        self.void_label = pyglet.text.Label("Void", font_size=50.0, bold=True,
+                                            anchor_x="center",
+                                            anchor_y="center")
+        self.play_label = pyglet.text.Label("[Enter] Play", font_size=20.0,
+                                            anchor_x="center",
+                                            anchor_y="center")
+        self.exit_label = pyglet.text.Label("[Escape] Exit", font_size=20.0,
+                                            anchor_x="center",
+                                            anchor_y="center")
 
     def step(self, dt):
         pass
 
     def on_draw(self):
-        pass
+        glPushMatrix()
+        glTranslated(self.window.width / 2.0, self.window.height * 2.0 / 3.0,
+                     0.0)
+        self.void_label.draw()
+        glPopMatrix()
+
+        glPushMatrix()
+        glTranslated(self.window.width / 3.0, self.window.height / 3.0, 0.0)
+        self.play_label.draw()
+        glPopMatrix()
+
+        glPushMatrix()
+        glTranslated(self.window.width * 2.0 / 3.0, self.window.height / 3.0,
+                     0.0)
+        self.exit_label.draw()
+        glPopMatrix()
 
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.ESCAPE:
