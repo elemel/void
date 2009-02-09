@@ -21,40 +21,8 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-import pyglet, sys
-from pyglet.gl import *
-from void.title_screen import TitleScreen
-
-class VoidWindow(pyglet.window.Window):
-    def __init__(self):
-        pyglet.window.Window.__init__(self, fullscreen=True, caption="Void")
-        self.set_mouse_visible(False)
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        self.screens = [TitleScreen(self)]
-        pyglet.clock.schedule_interval(self.step, 1.0 / 60.0)
-
-    def push_screen(self, screen):
-        self.screens.append(screen)
-
-    def pop_screen(self):
-        self.screens.pop()
-        if not self.screens:
-            sys.exit()
-
-    def step(self, dt):
-        self.screens[-1].step(dt)
-        
-    def on_draw(self):
-        glClearColor(0.0, 0.0, 0.0, 0.0)
-        self.clear()
-        self.screens[-1].on_draw()
-
-    def on_key_press(self, symbol, modifiers):
-        self.screens[-1].on_key_press(symbol, modifiers)
-
-    def on_key_release(self, symbol, modifiers):
-        self.screens[-1].on_key_release(symbol, modifiers)
+import pyglet
+from void.void_window import VoidWindow
 
 def main():
     window = VoidWindow()
