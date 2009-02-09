@@ -102,8 +102,9 @@ class Game(object):
         else:
             red = 1.0
             green = 1.0 - (fraction - 0.5) * 2.0
+        alpha = 0.5 + 0.5 * fraction
         glBegin(GL_LINES)
-        glColor4d(red, green, 0.0, 1.0)
+        glColor4d(red, green, 0.0, alpha)
         glVertex2d(0.0, 0.0)
         glVertex2d(position.x, position.y)
         glEnd()
