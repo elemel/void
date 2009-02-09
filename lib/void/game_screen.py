@@ -26,9 +26,8 @@ from pyglet.gl import *
 from void.game import Game
 
 class GameScreen(object):
-    def __init__(self, (width, height)):
-        self.width = width
-        self.height = height
+    def __init__(self, window):
+        self.window = window
         self.game = Game()
 
     def step(self, dt):
@@ -36,13 +35,13 @@ class GameScreen(object):
 
     def on_draw(self):
         glPushMatrix()
-        glTranslated(self.width / 2.0, self.height / 2.0, 0.0)
+        glTranslated(self.window.width / 2.0, self.window.height / 2.0, 0.0)
         self.game.on_draw()
         glPopMatrix()
 
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.ESCAPE:
-            sys.exit()
+            self.window.pop_screen()
         if symbol == pyglet.window.key.UP:
             self.game.ship.thrust = 1.0
         if symbol == pyglet.window.key.DOWN:
