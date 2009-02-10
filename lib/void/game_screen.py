@@ -28,10 +28,16 @@ from void.game import Game
 class GameScreen(object):
     def __init__(self, window):
         self.window = window
+        self.time = 0.0
+        self.time_step = 1.0 / 60.0
         self.game = Game()
 
     def step(self, dt):
-        self.game.step(dt)
+        # Use fixed time step.
+        self.time += dt
+        while self.time >= self.time_step:
+            self.time -= self.time_step
+            self.game.step(self.time_step)
 
     def on_draw(self):
         glPushMatrix()
