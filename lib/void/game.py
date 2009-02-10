@@ -147,9 +147,9 @@ class Game(object):
         self.contact_results.append((agent_1, agent_2))
 
 class VoidContactListener(box2d.b2ContactListener):
-    def __init__(self, window):
+    def __init__(self, game):
         super(VoidContactListener, self).__init__() 
-        self.window = window
+        self.game = game
 
     def Add(self, point):
         pass
@@ -161,4 +161,4 @@ class VoidContactListener(box2d.b2ContactListener):
         pass
 
     def Result(self, point):
-        self.window.contact_result(point)
+        self.game.contact_result(point)
