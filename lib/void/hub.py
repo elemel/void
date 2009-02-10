@@ -30,7 +30,7 @@ class Hub(Agent):
     def __init__(self, world):
         super(Hub, self).__init__(world)
         self.color = (1.0, 1.0, 1.0)
-        self.radius = 3.0
+        self.radius = 5.0
         self.vertices = []
         vertex_count = 90
         for i in xrange(vertex_count):
