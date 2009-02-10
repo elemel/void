@@ -27,6 +27,7 @@ from void.asteroid import Asteroid
 import void.box2d as box2d
 from void.hub import Hub
 from void.ship import Ship
+from void.void_contact_listener import VoidContactListener
 
 class Game(object):
     def __init__(self):
@@ -145,20 +146,3 @@ class Game(object):
         agent_1 = point.shape1.GetBody().GetUserData()
         agent_2 = point.shape2.GetBody().GetUserData()
         self.contact_results.append((agent_1, agent_2))
-
-class VoidContactListener(box2d.b2ContactListener):
-    def __init__(self, game):
-        super(VoidContactListener, self).__init__() 
-        self.game = game
-
-    def Add(self, point):
-        pass
-
-    def Persist(self, point):
-        pass
-
-    def Remove(self, point):
-        pass
-
-    def Result(self, point):
-        self.game.contact_result(point)
