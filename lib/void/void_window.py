@@ -40,18 +40,26 @@ class VoidWindow(pyglet.window.Window):
     def pop_screen(self):
         self.screens.pop()
         if not self.screens:
-            sys.exit()
+            self.on_close()
 
     def step(self, dt):
-        self.screens[-1].step(dt)
+        if self.screens:
+            self.screens[-1].step(dt)
         
     def on_draw(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
         self.clear()
-        self.screens[-1].on_draw()
+        if self.screens:
+            self.screens[-1].on_draw()
+
+    def on_close(self):
+        pyglet.clock.unschedule(self.step)
+        self.close()
 
     def on_key_press(self, symbol, modifiers):
-        self.screens[-1].on_key_press(symbol, modifiers)
+        if self.screens:
+            self.screens[-1].on_key_press(symbol, modifiers)
 
     def on_key_release(self, symbol, modifiers):
-        self.screens[-1].on_key_release(symbol, modifiers)
+        if self.screens:
+            self.screens[-1].on_key_release(symbol, modifiers)
