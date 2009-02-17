@@ -74,7 +74,7 @@ class Asteroid(Agent):
         return body
 
     def split(self):
-        if self.radius < 2.0:
+        if self.radius < 1.0:
             return []
         fraction = (1.0 + random.random()) / 3.0
         radius_1 = self.radius * math.sqrt(fraction)
