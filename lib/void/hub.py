@@ -24,6 +24,7 @@
 import math
 from pyglet.gl import *
 from void.agent import Agent
+from void.asteroid import Asteroid
 import void.box2d as box2d
 
 class Hub(Agent):
@@ -46,9 +47,10 @@ class Hub(Agent):
 
         shape_def = box2d.b2CircleDef()
         shape_def.radius = self.radius
-        shape_def.restitution = 1.0
+        # shape_def.restitution = 1.0
         shape_def.filter.categoryBits = 0x0001
         shape_def.filter.maskBits = 0x0002
+        shape_def.isSensor = True
 
         body = world.CreateBody(body_def)
         body.CreateShape(shape_def)
@@ -62,3 +64,7 @@ class Hub(Agent):
         for vertex in self.vertices:
             glVertex2d(vertex.x, vertex.y)
         glEnd()
+
+    def collide(self, other):
+        if type(other) is Asteroid:
+            other.alive = False

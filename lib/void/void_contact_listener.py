@@ -26,16 +26,16 @@ from void import box2d
 class VoidContactListener(box2d.b2ContactListener):
     def __init__(self, game):
         super(VoidContactListener, self).__init__() 
-        self.game = game
+        self.__game = game
 
     def Add(self, point):
-        pass
+        self.__game.add_contact(point)
 
     def Persist(self, point):
-        pass
+        self.__game.persist_contact(point)
 
     def Remove(self, point):
-        pass
+        self.__game.remove_contact(point)
 
     def Result(self, point):
-        self.game.contact_result(point)
+        self.__game.contact_result(point)

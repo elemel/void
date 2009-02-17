@@ -32,7 +32,7 @@ from void.void_contact_listener import VoidContactListener
 class Game(object):
     def __init__(self):
         self.world = self.create_world()
-        self.contact_results = []
+        self.added_contacts = []
         self.contact_listener = VoidContactListener(self)
         self.world.SetContactListener(self.contact_listener)
         self.hub = Hub(self.world)
@@ -45,7 +45,7 @@ class Game(object):
         self.ship.step(dt)
         self.step_laser(dt, maybe_dead)
         self.world.Step(dt, 10, 8)
-        for agent_1, agent_2 in self.contact_results:
+        for agent_1, agent_2 in self.added_contacts:
             maybe_dead.add(agent_1)
             maybe_dead.add(agent_2)
             agent_1.collide(agent_2)
@@ -55,7 +55,7 @@ class Game(object):
                 if type(agent) is Asteroid:
                     agent.split()
                 self.world.DestroyBody(agent.body)
-        del self.contact_results[:]
+        del self.added_contacts[:]
 
     def step_laser(self, dt, maybe_dead):
         if self.ship.firing:
@@ -142,7 +142,16 @@ class Game(object):
         gravity = box2d.b2Vec2(0.0, 0.0)
         return box2d.b2World(world_aabb, gravity, False)
 
-    def contact_result(self, point):
+    def add_contact(self, point):
         agent_1 = point.shape1.GetBody().GetUserData()
         agent_2 = point.shape2.GetBody().GetUserData()
-        self.contact_results.append((agent_1, agent_2))
+        self.added_contacts.append((agent_1, agent_2))
+
+    def persist_contact(self, point):
+        pass
+
+    def remove_contact(self, point):
+        pass
+
+    def contact_result(self, point):
+        pass
